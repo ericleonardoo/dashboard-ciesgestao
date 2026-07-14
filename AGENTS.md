@@ -1,4 +1,4 @@
-# AGENTS.md — CIES Gestão
+# AGENTS.md — CIES Gestão (Firebase Edition)
 
 > Documento operacional obrigatório para qualquer agente de IA ou pessoa que trabalhe neste repositório.
 > Este arquivo define **como trabalhar**. O arquivo `CONTEXT.md` define **o que está sendo construído e por quê**.
@@ -57,7 +57,7 @@ O produto não é um clone dos sistemas da UniFecaf, UniFacvest ou FSL. É uma c
 - Código, nomes de arquivos técnicos, variáveis, funções, tipos, tabelas e commits: **inglês**, salvo termos de domínio cujo uso em português evite ambiguidade.
 - Use linguagem simples na interface. Evite jargão técnico para colaboradores da CIES.
 - Mensagens de erro devem explicar o problema e a ação necessária.
-- Nunca exponha stack traces, detalhes de banco, tokens ou informações internas ao usuário final.
+- Nunca exponha stack traces, detalhes de infraestrutura/dados, tokens ou informações internas ao usuário final.
 
 Exemplos de nomes técnicos preferidos:
 
@@ -154,7 +154,7 @@ Restrições:
 
 Responsabilidades:
 
-- implementar funcionalidades completas, da interface ao banco;
+- implementar funcionalidades completas, da interface ao Firestore e às regras de segurança;
 - respeitar permissões no servidor, não apenas na interface;
 - criar componentes reutilizáveis sem abstrair antes da hora;
 - manter TypeScript estrito e código legível.
@@ -231,7 +231,7 @@ Restrições:
 
 - não colocar credenciais em repositório;
 - não realizar deploy de produção sem aprovação humana;
-- não alterar banco de produção manualmente sem plano de migração e backup.
+- não alterar Firestore, Security Rules, índices, Auth, IAM ou dados de produção sem plano de evolução, backup e rollback.
 
 ### 5.9 `@ux` — UX, acessibilidade e design do sistema
 
@@ -260,7 +260,7 @@ Para qualquer tarefa não trivial, siga este ciclo:
 - Leia contexto e código relacionado.
 - Identifique regras confirmadas.
 - Liste dúvidas bloqueadoras somente quando realmente impedirem a implementação.
-- Verifique se a tarefa altera banco, permissões, importação ou cálculos.
+- Verifique se a tarefa altera Firestore, Rules, Auth, permissões, importação, índices ou cálculos.
 
 ### Etapa 2 — Planejar
 
@@ -388,7 +388,7 @@ Toda PR deve incluir:
 - solução aplicada;
 - screenshots para alterações visuais;
 - testes executados;
-- riscos e impacto no banco;
+- riscos e impacto no Firestore, Rules, índices e custos;
 - checklist de segurança e permissões;
 - referência à issue, quando houver.
 
@@ -397,7 +397,7 @@ PRs devem ser pequenas o bastante para revisão real. Como regra prática, prefi
 ### 7.5 Revisão
 
 - O autor não aprova a própria PR como única revisão.
-- Mudanças em importação, autenticação, autorização, banco, dinheiro ou regras críticas exigem revisão do outro desenvolvedor.
+- Mudanças em importação, Firebase Auth, Security Rules, autorização server-side, Firestore, dinheiro ou regras críticas exigem revisão do outro desenvolvedor.
 - Comentários bloqueadores precisam ser resolvidos antes do merge.
 - Preferir **Squash and merge** para manter histórico limpo.
 
@@ -405,17 +405,24 @@ PRs devem ser pequenas o bastante para revisão real. Como regra prática, prefi
 
 ## 8. Direção técnica inicial
 
-Estas diretrizes são a base inicial e devem ser confirmadas no bootstrap técnico:
+Estas diretrizes são a base técnica escolhida para o projeto:
 
 - Next.js com App Router.
 - TypeScript em modo estrito.
 - React Server Components por padrão.
-- Client Components apenas quando houver interação, estado local ou API de navegador.
+- Client Components apenas quando houver interação, estado local, Firebase client SDK ou API de navegador.
 - Estilização com Tailwind CSS e componentes acessíveis.
-- Banco relacional PostgreSQL.
-- Camada de acesso a dados tipada.
+- Firebase Console como plataforma backend.
+- Cloud Firestore como banco documental.
+- Firebase Authentication para login individual de colaboradores.
+- Firebase Admin SDK somente no servidor.
+- Cookie de sessão seguro para autenticação SSR.
+- Firebase Security Rules para acessos do SDK cliente.
+- Autorização explícita no servidor para toda operação via Admin SDK.
+- Firebase Local Emulator Suite para desenvolvimento e testes.
+- Regras, índices e configuração Firebase versionados.
+- Firebase App Hosting como hospedagem-alvo proposta, conectada ao GitHub.
 - Validação de entrada compartilhada entre servidor e importação.
-- Autenticação por usuário individual.
 - Autorização baseada em permissões por módulo e ação.
 - Aplicação inicialmente como monólito modular.
 
@@ -444,28 +451,39 @@ src/
     action-plans/
     reports/
   lib/
+    firebase/
+      client.ts
+      admin.ts
+      auth-session.ts
+      converters/
+      repositories/
+    permissions/
+    validation/
   server/
     auth/
-    db/
-    permissions/
+    actions/
+    repositories/
+    services/
   types/
   validators/
 
+firebase.json
+.firebaserc.example
+firestore.rules
+firestore.indexes.json
+storage.rules  # somente quando necessário
+apphosting.yaml # quando configurado
 docs/
   decisions/
   specifications/
   test-plans/
-
-prisma/ ou equivalente
 public/
 .agents/
   skills/
   workflows/
 ```
 
-A estrutura final deve refletir a ferramenta de banco escolhida. Não crie pastas vazias apenas para parecer “enterprise”.
-
----
+A estrutura final deve refletir o Firebase e o domínio. Não crie pastas vazias apenas para parecer “enterprise”.
 
 ## 9. Regras de domínio que nunca podem ser quebradas
 
@@ -625,6 +643,17 @@ Evitar exclusão física. Quando exclusão física for realmente necessária:
 
 ## 11. Segurança e privacidade
 
+Regras específicas do Firebase:
+
+- Firebase Admin SDK é exclusivo do servidor e ignora Security Rules; autorize explicitamente cada operação.
+- Security Rules devem negar por padrão, restringir campos e ser testadas no Emulator Suite.
+- O usuário nunca pode editar suas próprias áreas, funções ou permissões.
+- CPF não pode aparecer em ID de documento, URL, log, analytics ou nome de arquivo.
+- A fingerprint de duplicidade deve ser HMAC gerada no servidor.
+- Firebase client config pode estar no cliente, mas credenciais administrativas e secrets nunca.
+- App Check, IAM mínimo, alertas de orçamento e backup são gates de produção.
+
+
 O sistema processa dados pessoais. Portanto:
 
 - Nunca usar dados reais em testes automatizados, screenshots públicas ou issues.
@@ -635,7 +664,7 @@ O sistema processa dados pessoais. Portanto:
 - Armazenar arquivos em área privada ou descartá-los após processamento conforme política aprovada.
 - Implementar rate limiting onde houver risco de abuso.
 - Aplicar proteção contra CSRF quando pertinente à estratégia de autenticação.
-- Usar queries parametrizadas ou ORM seguro.
+- Usar repositórios Firestore tipados, queries indexadas e validação server-side.
 - Validar autorização em Server Actions, Route Handlers e consultas.
 - Nunca confiar em role/permission enviada pelo cliente.
 - Manter `.env`, chaves e credenciais fora do Git.
@@ -753,7 +782,7 @@ Uma tarefa só está concluída quando:
 - testes aplicáveis foram criados e executados;
 - lint, tipos e build passam;
 - não há segredo ou dado real exposto;
-- migrações foram revisadas;
+- Security Rules, índices e scripts de evolução de dados foram revisados;
 - documentação relevante foi atualizada;
 - o diff foi revisado;
 - a PR possui descrição e evidências;
@@ -769,7 +798,7 @@ Atualize `CONTEXT.md` somente quando houver uma decisão confirmada ou mudança 
 
 Crie ADR em `docs/decisions/` quando decidir:
 
-- banco e ORM;
+- Firebase, Firestore e estratégia de acesso a dados;
 - autenticação;
 - modelo de permissões;
 - armazenamento/processamento de planilhas;
@@ -781,7 +810,7 @@ Crie ADR em `docs/decisions/` quando decidir:
 Formato sugerido:
 
 ```text
-docs/decisions/0001-database-and-orm.md
+docs/decisions/0001-firebase-and-firestore.md
 ```
 
 Cada ADR deve conter contexto, decisão, alternativas e consequências.
@@ -795,7 +824,7 @@ Não use `CONTEXT.md` como diário de desenvolvimento. Use changelog, issues, PR
 - Trabalhe apenas dentro do diretório do projeto.
 - Não acesse arquivos externos sem necessidade e aprovação.
 - Não execute comandos destrutivos automaticamente.
-- Peça confirmação antes de apagar arquivos, resetar banco, reverter migrações, alterar muitas dependências ou fazer deploy.
+- Peça confirmação antes de apagar arquivos, apagar coleções, reverter backfills ou alterar Rules/índices, alterar muitas dependências ou fazer deploy.
 - Prefira artifacts verificáveis: planos, especificações, diffs, resultados de testes e screenshots.
 - Use subagentes para pesquisa, QA e revisão, mas mantenha um único responsável pela integração.
 - Não aceite a saída de um agente como verdade sem verificar no código e no terminal.

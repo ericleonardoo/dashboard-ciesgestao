@@ -1,4 +1,4 @@
-# CONTEXT.md — Sistema Interno de Gestão da CIES
+# CONTEXT.md — Sistema Interno de Gestão da CIES (Firebase Edition)
 
 > Contexto de produto e domínio para humanos e agentes de IA.
 > Este documento registra o que já foi confirmado, o que está proposto e o que ainda precisa ser decidido.
@@ -851,143 +851,138 @@ Matrícula
 
 ## 19. Modelo conceitual inicial
 
-Este modelo é uma proposta de domínio, não um schema final.
+Este modelo é uma proposta de domínio para Cloud Firestore, não um desenho final e imutável.
 
-### Entidades principais
+### Collections e documentos principais
 
-#### User
+#### `users/{uid}`
 
-- id
 - name
 - email
 - status
-- authentication data/reference
+- areas
+- permissions por módulo/ação
+- employeeId opcional
+- createdAt / updatedAt
 
-#### Area
+O `uid` vem do Firebase Authentication. O usuário não pode elevar suas próprias permissões.
 
-- id
+#### `areas/{areaId}`
+
 - name
+- active
 
-#### UserArea / UserPermission
+#### `employees/{employeeId}`
 
-- userId
-- areaId ou permissionId
-- action
-- module
-
-#### Employee
-
-- id
 - userId opcional
 - displayName
 - active
+- primaryArea
 
-#### SellerAlias
+#### `sellerAliases/{aliasId}`
 
-- id
 - employeeId
 - sourceName
+- normalizedSourceName
 
-#### Student
+#### `students/{studentId}`
 
-- id
-- normalizedCpf
-- cpfEncryptedOrProtected
+- normalizedCpf protegido
+- cpfFingerprint para busca/deduplicação server-side
 - name
 - phone
+- createdAt / updatedAt
 
-#### Enrollment
+CPF nunca deve ser document ID. A estratégia final de proteção deve ser documentada em ADR.
 
-- id
+#### `enrollments/{enrollmentId}`
+
 - studentId
 - institution
 - courseOfficialName
 - courseNormalizedName
-- referenceMonth
-- amount
+- referenceMonth (`YYYY-MM`)
+- amountCents
 - type opcional
 - sellerId
-- welcomeStatus
-- releaseStatus
+- sellerSourceName
+- welcomeStatus (`yes` / `no` / `unset`)
+- releaseStatus (`yes` / `no` / `unset`)
 - paymentMethod
 - redirect
 - validityStatus
+- dedupFingerprint
 - importBatchId opcional
-- createdAt
-- updatedAt
+- sourceRowNumber opcional
+- schemaVersion
+- createdAt / createdBy
+- updatedAt / updatedBy
 
-#### ImportBatch
+#### `importBatches/{batchId}`
 
-- id
 - referenceMonth
-- originalFileName
+- originalFileName sanitizado
 - importedBy
 - status
 - totals
-- createdAt
+- parserVersion
+- createdAt / completedAt
 
-#### ImportRowResult
+#### `importBatches/{batchId}/rows/{rowId}`
 
-- id
-- batchId
 - rowNumber
 - status
 - errorCode
-- message
+- message sanitizada
 - enrollmentId opcional
+- normalizedPreview sem PII desnecessária
 
-#### Goal
+#### `goals/{goalId}`
 
-- id
 - period
 - metric
 - target
 - scope
 - status
 
-#### KpiSnapshot ou consulta calculada
+#### `kpiSnapshots/{snapshotId}` ou agregação calculada
 
-A decisão entre snapshots persistidos e cálculo sob demanda ainda precisa ser feita.
+A decisão entre aggregation queries, snapshots persistidos e agregação de escrita será feita considerando consistência, custo de leitura e volume. Dashboards não devem baixar toda a collection para calcular totais no cliente.
 
-#### Lead
+#### `leads/{leadId}`
 
-- id
-- contact data
+- contact data protegida
 - interest
 - source
 - owner
 - status
 - outcome
 
-#### Partnership
+#### `partnerships/{partnershipId}`
 
-- id
 - company
 - contact
 - owner
 - status
 - metrics
 
-#### Campaign
+#### `campaigns/{campaignId}`
 
-- id
 - channel
 - period
-- cost
+- costCents
 - metrics
 
-#### SupportCase
+#### `relationshipCases/{caseId}`
 
-- id
 - studentId opcional
 - category
 - status
 - owner
 - retentionImpact
 
-#### ActionPlan
+#### `actionPlans/{planId}`
 
-- id
 - objective
 - what
 - why
@@ -995,25 +990,29 @@ A decisão entre snapshots persistidos e cálculo sob demanda ainda precisa ser 
 - when
 - who
 - how
-- howMuch
+- howMuchCents
 - linkedKpi
 - status
 
-#### AuditLog
+#### `auditLogs/{logId}`
 
-- id
-- actor
+- actorId
 - entity
 - entityId
 - action
-- changedFields
+- changedFields sem valores sensíveis desnecessários
 - timestamp
+- request/correlation id quando aplicável
 
-### Observação
+### Observações de modelagem Firestore
 
-Dados pessoais e financeiros exigem modelagem segura. O schema final deve evitar cópia desnecessária e aplicar índices sem expor valores sensíveis.
-
----
+- Use top-level collections para dados consultados globalmente.
+- Use subcollections apenas para filhos realmente acoplados ao pai.
+- Evite arrays ilimitados e documentos que cresçam indefinidamente.
+- Planeje queries e composite indexes antes de implementar filtros.
+- Toda desnormalização precisa ter fonte canônica e mecanismo de atualização.
+- Dados pessoais e financeiros exigem Rules, autorização server-side, mascaramento e logs seguros.
+- Evoluções de estrutura devem usar `schemaVersion` e scripts idempotentes de backfill.
 
 ## 20. Requisitos de experiência do usuário
 
@@ -1080,41 +1079,49 @@ A empresa possui poucos colaboradores, mas pode ter uma base grande de matrícul
 
 - Desenvolvimento colaborativo usando GitHub.
 - Uso do Google Antigravity como ambiente/agente de desenvolvimento.
-- Aplicação web.
-- Intenção de utilizar Next.js.
-- Arquivos de contexto `AGENTS.md`, `CONTEXT.md` e futuro `HYPER_PROMPT.md`.
+- Aplicação web em Next.js.
+- Firebase Console como plataforma backend escolhida.
+- Cloud Firestore como banco de dados.
+- Firebase Authentication para acesso individual dos colaboradores.
+- Firebase Admin SDK somente no servidor.
+- Firebase Security Rules e autorização server-side como camadas complementares.
+- Arquivos de contexto `AGENTS.md`, `CONTEXT.md` e `HYPER_PROMPT.md`.
 
 ### Proposto
 
 - Next.js App Router.
 - TypeScript estrito.
-- Tailwind CSS.
-- Biblioteca de componentes acessíveis.
-- PostgreSQL.
-- ORM tipado.
-- Autenticação individual e RBAC/permissões granulares.
-- Deploy em plataforma compatível com Next.js e banco gerenciado.
-- Testes unitários, integração e E2E.
+- Tailwind CSS e shadcn/ui.
+- Sessão SSR por cookie seguro criado a partir de Firebase ID token.
+- Cloud Firestore Standard edition em Native mode.
+- Firebase Local Emulator Suite.
+- Firebase App Hosting integrado ao GitHub.
+- Firebase App Check em produção.
+- Cloud Storage apenas se a retenção de planilhas for aprovada.
+- Cloud Functions 2nd gen somente para tarefas assíncronas/agendadas justificadas.
+- Permissões granulares em `users/{uid}`; custom claims apenas para atributos pequenos e estáveis.
+- Testes unitários, integração, Security Rules e E2E.
+- Ambientes separados por projeto/alias Firebase.
 
 ### Pendente de decisão
 
-- provedor de banco;
-- ORM;
-- autenticação;
-- hospedagem;
-- armazenamento temporário dos arquivos importados;
+- região do Firestore e do App Hosting;
+- plano Spark/Blaze e orçamento mensal;
+- política de criação inicial de usuários;
+- uso definitivo de custom claims;
+- hospedagem final no Firebase App Hosting;
+- retenção ou descarte imediato dos arquivos importados;
+- necessidade de Cloud Storage;
+- necessidade de Cloud Functions;
 - serviço de e-mail;
 - domínio e e-mails corporativos;
 - biblioteca de gráficos;
-- ferramenta de testes E2E;
-- integração direta com Google Sheets no futuro;
-- política de backups;
+- política de backups/exportações;
 - política LGPD/privacidade interna;
-- estratégia de ambientes: local, preview, staging e produção.
+- estratégia de projetos Firebase: development, staging e production;
+- regras detalhadas de App Check e monitoramento.
 
 Decisões relevantes devem ser registradas em ADRs.
-
----
 
 ## 23. Estratégia de desenvolvimento colaborativo
 
@@ -1302,12 +1309,15 @@ Mitigação: aplicar os não objetivos e exigir justificativa gerencial para nov
 - Mostrar faturamento total e válido.
 - Todos os colaboradores terão acesso.
 - O sistema não substitui sistemas das faculdades nem toda rotina manual.
+- Firebase Console é a plataforma backend escolhida.
+- Cloud Firestore será o banco do sistema.
+- Firebase Authentication será usado nos acessos individuais.
 
 ### Proposto
 
 - E-mails corporativos.
 - Visibilidade de leitura entre áreas.
-- Next.js App Router + TypeScript + PostgreSQL.
+- Next.js App Router + TypeScript strict.
 - Aliases de vendedor.
 - Monólito modular.
 - Arquivar/inativar no lugar de excluir.
@@ -1315,8 +1325,7 @@ Mitigação: aplicar os não objetivos e exigir justificativa gerencial para nov
 
 ### Pendente
 
-- Stack técnica final.
-- Provedor de autenticação e banco.
+- Região, plano, ambientes e hospedagem Firebase finais.
 - Permissões detalhadas de Comercial, Marketing e Administrativo.
 - Regra de matrícula válida.
 - Fórmulas e faixas do semáforo.

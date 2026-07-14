@@ -1,0 +1,30 @@
+{
+  "edition": "Firebase",
+  "version": "2.0",
+  "files": [
+    ".agents/rules/cies-project.md",
+    ".agents/workflows/cies-bootstrap.md",
+    ".agents/workflows/cies-build.md",
+    ".agents/workflows/cies-feature.md",
+    ".agents/workflows/cies-firebase-audit.md",
+    ".agents/workflows/cies-release-candidate.md",
+    ".agents/workflows/cies-resume.md",
+    ".agents/workflows/cies-review.md",
+    ".agents/workflows/cies-sync-context.md",
+    "AGENTS.md",
+    "CONTEXT.md",
+    "HYPER_PROMPT.md",
+    "README_HYPER_PROMPT.md",
+    "docs/ai/FIREBASE_ARCHITECTURE_BASELINE.md",
+    "docs/ai/FIREBASE_MIGRATION_NOTES.md",
+    "docs/ai/SKILL_BUNDLE_CIES.md",
+    "scripts/verify-antigravity-pack.ps1"
+  ],
+  "validation": {
+    "required_files": "PASS",
+    "markdown_fences": "PASS",
+    "legacy_stack_references": "PASS",
+    "workflows_frontmatter": "PASS",
+    "standalone_hyperprompt_match": "PASS"
+  }
+}

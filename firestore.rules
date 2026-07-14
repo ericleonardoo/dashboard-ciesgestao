@@ -1,0 +1,56 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Negar acesso por padrão
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Regras para a coleção de usuários
+    match /users/{userId} {
+      // O usuário pode ler seu próprio documento se estiver autenticado
+      allow read: if request.auth != null && request.auth.uid == userId;
+      // Somente administradores (gestão) podem criar ou editar usuários
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.areas.hasAny(['gestao']);
+    }
+
+    // Regras para a coleção de matrículas
+    match /enrollments/{enrollmentId} {
+      // Usuários autenticados podem ler matrículas
+      allow read: if request.auth != null;
+      // Regra de escrita para matrículas
+      allow create, update: if request.auth != null && (
+        // Se for gestao/admin, pode tudo
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.areas.hasAny(['gestao']) ||
+        // Se for Relacionamento ou Administrativo, pode editar dados normais
+        (
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.areas.hasAny(['relacionamento', 'administrativo']) &&
+          // Mas NÃO pode alterar os campos críticos 'amountCents' e 'sellerId' se não for admin/gestao
+          (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['amountCents', 'sellerId', 'sellerName']))
+        )
+      );
+      // Ninguém pode excluir matrículas fisicamente sem ser gestao
+      allow delete: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.areas.hasAny(['gestao']);
+    }
+
+    // Regras para os lotes de importação
+    match /importBatches/{batchId} {
+      allow read: if request.auth != null;
+      // Apenas Administrativo ou Gestao podem criar ou atualizar lotes
+      allow write: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.areas.hasAny(['gestao', 'administrativo']);
+    }
+
+    // Regras para os logs de auditoria (append-only)
+    match /auditLogs/{logId} {
+      allow read: if request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.areas.hasAny(['gestao']);
+      // Qualquer usuário autenticado pode criar logs de auditoria
+      allow create: if request.auth != null && request.resource.data.actorId == request.auth.uid;
+      // Proibido alterar ou excluir logs de auditoria
+      allow update, delete: if false;
+    }
+  }
+}
