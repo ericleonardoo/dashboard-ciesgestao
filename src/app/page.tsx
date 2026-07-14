@@ -1,24 +1,51 @@
 'use client';
 
+/**
+ * -----------------------------------------------------------------------------
+ * PAINEL GERAL (DASHBOARD) - PÁGINA PRINCIPAL (ESTILO CORPORATIVO/LINEAR)
+ * -----------------------------------------------------------------------------
+ */
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+
 import { getAvailableMonths, getDashboardData, DashboardData } from '@/server/actions/dashboard';
+
 import { 
   FileSpreadsheet,
   Award,
-  BookOpen
+  BookOpen,
+  ChevronDown,
+  Activity
 } from 'lucide-react';
+
 import { KpiCardSkeleton, TableSkeleton } from '../components/shared/Skeleton';
+
+// Importação da biblioteca Recharts (Gráficos Profissionais)
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  PieChart,
+  Pie,
+  Cell,
+  Legend,
+  BarChart,
+  Bar
+} from 'recharts';
 
 export default function Home() {
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Carrega meses e dados do dashboard
   useEffect(() => {
     async function loadDashboard() {
       setLoading(true);
@@ -27,12 +54,10 @@ export default function Home() {
         const isDemo = typeof window !== 'undefined' && localStorage.getItem('cies_demo_mode') === 'true';
 
         if (isDemo) {
-          // Importa utilitários mock locais
           const { demoGetAvailableMonths, demoGetDashboardStats, demoGetBvsQueue } = await import('@/lib/demo-store');
           const months = demoGetAvailableMonths();
           setAvailableMonths(months);
 
-          // Se não houver mês selecionado, pega o mais recente
           const activeMonth = selectedMonth || months[0] || '';
           setSelectedMonth(activeMonth);
 
@@ -59,7 +84,6 @@ export default function Home() {
             });
           }
         } else {
-          // Fluxo normal via Server Actions (Firebase/Firestore)
           const months = await getAvailableMonths();
           setAvailableMonths(months);
 
@@ -81,7 +105,6 @@ export default function Home() {
     loadDashboard();
   }, [selectedMonth]);
 
-  // Formata o mês ex: "2026-06" para "Junho de 2026"
   const formatMonthName = (monthStr: string) => {
     if (!monthStr) return '';
     const [year, monthNum] = monthStr.split('-');
@@ -93,7 +116,6 @@ export default function Home() {
     return `${months[monthIndex]} / ${year}`;
   };
 
-  // Formata centavos inteiros para moeda BRL
   const formatMoney = (cents: number) => {
     return new Intl.NumberFormat('pt-BR', {
       style: 'currency',
@@ -101,8 +123,15 @@ export default function Home() {
     }).format(cents / 100);
   };
 
-  // Metas gerenciais fictícias para o MVP
-  const GOAL_REVENUE = 20000000; // R$ 200.000,00 em centavos
+  const formatMoneyCompact = (cents: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      notation: 'compact'
+    }).format(cents / 100);
+  };
+
+  const GOAL_REVENUE = 20000000;
   const GOAL_ENROLLMENTS = 150;
 
   const validAmount = dashboardData ? dashboardData.validAmountCents : 0;
@@ -111,34 +140,13 @@ export default function Home() {
   const revenuePercentage = Math.min(Math.round((validAmount / GOAL_REVENUE) * 100), 100);
   const enrollmentsPercentage = Math.min(Math.round((totalEnrollments / GOAL_ENROLLMENTS) * 100), 100);
 
-  // Calcula a cor do semáforo do faturamento válido (Regras baseadas em porcentagem da meta)
-  const getSemaphoreBadge = (percent: number) => {
-    if (percent >= 90) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 animate-pulse">
-          ● Verde ({percent}%)
-        </span>
-      );
-    }
-    if (percent >= 70) {
-      return (
-        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-          ▲ Amarelo ({percent}%)
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
-        ■ Vermelho ({percent}%)
-      </span>
-    );
-  };
+  // Paleta Profissional para os gráficos (Preto/Cinza/Acentos sutis)
+  const PIE_COLORS = ['#18181b', '#52525b', '#a1a1aa'];
 
-  // Caso não existam dados importados no banco (Estado Vazio / No Data)
   if (!loading && availableMonths.length === 0) {
     return (
       <div className="min-h-[70vh] flex flex-col items-center justify-center space-y-6 text-center animate-fade-in max-w-xl mx-auto">
-        <div className="p-4 bg-violet-500/10 text-violet-400 rounded-full border border-violet-500/20">
+        <div className="p-4 bg-secondary text-muted-foreground rounded-full border border-border">
           <FileSpreadsheet className="h-16 w-16" />
         </div>
         <div className="space-y-2">
@@ -147,7 +155,7 @@ export default function Home() {
             O sistema ainda não possui dados de faturamento ou matrículas para consolidação gerencial.
           </p>
         </div>
-        <div className="bg-card border border-border p-5 rounded-xl text-xs text-muted-foreground text-left leading-relaxed">
+        <div className="bg-card border border-border p-5 rounded-xl text-xs text-muted-foreground text-left leading-relaxed shadow-sm">
           <p className="font-semibold text-foreground mb-1.5">Como iniciar:</p>
           1. Vá em **Importações** no menu lateral.<br />
           2. Selecione o mês de referência correspondente.<br />
@@ -156,7 +164,7 @@ export default function Home() {
         </div>
         <Link
           href="/importacoes"
-          className="py-2.5 px-6 border border-transparent text-sm font-bold rounded-lg text-primary-foreground bg-primary hover:bg-violet-700 transition-colors block text-center"
+          className="py-2.5 px-6 border border-border text-sm font-bold rounded-lg text-primary-foreground bg-primary hover:bg-primary/90 transition-colors block text-center shadow-sm"
         >
           Ir para Importações
         </Link>
@@ -164,223 +172,281 @@ export default function Home() {
     );
   }
 
+  // Preparando dados para os gráficos
+  const sellersChartData = dashboardData?.sellers.map(s => ({
+    name: s.name.split(' ')[0], // Apenas o primeiro nome para não amontoar o gráfico
+    vendas: s.count,
+    faturamento: s.amountCents / 100
+  })) || [];
+
+  const institutionsChartData = dashboardData?.institutions.map(i => ({
+    name: i.name,
+    value: i.amountCents / 100
+  })) || [];
+
   return (
-    <div className="space-y-8 animate-fade-in">
-      {/* Título e Filtro de Período */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+    <div className="space-y-8 animate-fade-in pb-12">
+      
+      {/* CABEÇALHO */}
+      <div className="flex flex-col md:flex-row md:items-end md:justify-between space-y-4 md:space-y-0 pb-6 border-b border-border">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-foreground">
-            Painel Geral
+          <h1 className="text-2xl font-extrabold tracking-tight text-foreground">
+            Visão Geral
           </h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Visão estratégica consolidada de matrículas e faturamento da operação CIES.
+          <p className="mt-1 text-sm text-muted-foreground">
+            Métricas financeiras e de conversão da operação.
           </p>
         </div>
         
-        {/* Seletor de Período */}
         {availableMonths.length > 0 && (
-          <div className="flex items-center space-x-3 bg-card border border-border px-4 py-2 rounded-lg shadow-sm">
-            <label htmlFor="period-select" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Período:
-            </label>
-            <select
-              id="period-select"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-transparent text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-secondary rounded-sm cursor-pointer border-none p-0 pr-6 transition-all"
+          <div className="relative">
+            <div 
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center space-x-3 bg-card border border-border px-4 py-2 rounded-lg shadow-sm cursor-pointer hover:bg-secondary transition-all"
             >
-              {availableMonths.map((m) => (
-                <option key={m} value={m} className="bg-card text-foreground">
-                  {formatMonthName(m)}
-                </option>
-              ))}
-            </select>
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                Período:
+              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm font-semibold text-foreground">
+                  {formatMonthName(selectedMonth)}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </div>
+            </div>
+
+            {isDropdownOpen && (
+              <>
+                <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)}></div>
+                <div className="absolute right-0 mt-2 w-56 bg-card border border-gray-400 rounded-xl shadow-2xl z-50 p-1.5">
+                  {availableMonths.map((m) => {
+                    const isActive = m === selectedMonth;
+                    return (
+                      <div
+                        key={m}
+                        onClick={() => {
+                          setSelectedMonth(m);
+                          setIsDropdownOpen(false);
+                        }}
+                        className={`px-3 py-2 my-0.5 text-sm cursor-pointer flex items-center justify-between rounded-md transition-all duration-200 border border-transparent ${
+                          isActive 
+                            ? 'bg-secondary text-foreground font-semibold shadow-sm border-border' 
+                            : 'text-muted-foreground hover:text-foreground hover:bg-background hover:border-gray-200 hover:shadow-md hover:-translate-y-0.5'
+                        }`}
+                      >
+                        {formatMonthName(m)}
+                        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-foreground shadow-sm"></div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         )}
       </div>
 
       {error && (
-        <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-lg">
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-lg font-medium">
           ⚠️ {error}
         </div>
       )}
 
       {loading ? (
         <div className="space-y-8">
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <KpiCardSkeleton />
             <KpiCardSkeleton />
             <KpiCardSkeleton />
             <KpiCardSkeleton />
-          </div>
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 bg-card border border-border rounded-xl p-6 shadow-sm">
-              <TableSkeleton rows={4} columns={2} />
-            </div>
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-              <TableSkeleton rows={4} columns={2} />
-            </div>
           </div>
         </div>
       ) : dashboardData ? (
         <>
-          {/* Grid de Cards KPIs */}
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {/* Card 1: Faturamento Válido */}
-            <div className="relative overflow-hidden bg-card border border-border rounded-xl p-6 shadow-sm hover:border-violet-500/50 transition-all duration-300 group">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-all"></div>
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-medium text-muted-foreground">Faturamento Válido</span>
-                {getSemaphoreBadge(revenuePercentage)}
+          {/* CARDS DE KPI (Estilo Vercel/Linear - Sólidos, sem blur, bordas finas) */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm hover:border-foreground/20 transition-all">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Fat. Válido</span>
+                <span className="text-xs font-semibold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-full">{revenuePercentage}% Meta</span>
               </div>
-              <div className="mt-4">
-                <span className="text-3xl font-extrabold text-foreground">
+              <div>
+                <span className="text-3xl font-extrabold text-foreground tracking-tight">
                   {formatMoney(dashboardData.validAmountCents)}
                 </span>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Meta: {formatMoney(GOAL_REVENUE)}
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  Alvo: {formatMoneyCompact(GOAL_REVENUE)}
                 </p>
               </div>
             </div>
 
-            {/* Card 2: Faturamento Total Planilha */}
-            <div className="relative overflow-hidden bg-card border border-border rounded-xl p-6 shadow-sm hover:border-violet-500/50 transition-all duration-300 group">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-all"></div>
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-medium text-muted-foreground">Faturamento Total</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-violet-500/10 text-violet-400 border border-violet-500/20">
-                  Bruto Importado
-                </span>
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm hover:border-foreground/20 transition-all">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Fat. Total Bruto</span>
               </div>
-              <div className="mt-4">
-                <span className="text-3xl font-extrabold text-foreground">
+              <div>
+                <span className="text-3xl font-extrabold text-foreground tracking-tight">
                   {formatMoney(dashboardData.totalAmountCents)}
                 </span>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Diferença: {formatMoney(dashboardData.totalAmountCents - dashboardData.validAmountCents)} em duplicidades
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  Diferença: {formatMoneyCompact(dashboardData.totalAmountCents - dashboardData.validAmountCents)} (Lixo)
                 </p>
               </div>
             </div>
 
-            {/* Card 3: Matrículas Feitas */}
-            <div className="relative overflow-hidden bg-card border border-border rounded-xl p-6 shadow-sm hover:border-violet-500/50 transition-all duration-300 group">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-yellow-500/10 rounded-full blur-2xl group-hover:bg-yellow-500/20 transition-all"></div>
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-medium text-muted-foreground">Matrículas Feitas</span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-500/10 text-yellow-400 border border-yellow-500/20">
-                  {enrollmentsPercentage}% da Meta
-                </span>
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm hover:border-foreground/20 transition-all">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Matrículas</span>
+                <span className="text-xs font-semibold text-foreground bg-secondary px-2 py-0.5 rounded-full">{enrollmentsPercentage}% Meta</span>
               </div>
-              <div className="mt-4">
-                <span className="text-3xl font-extrabold text-foreground">
+              <div>
+                <span className="text-3xl font-extrabold text-foreground tracking-tight">
                   {dashboardData.totalEnrollments}
                 </span>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Meta: {GOAL_ENROLLMENTS} matrículas
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  Alvo: {GOAL_ENROLLMENTS} matrículas
                 </p>
               </div>
             </div>
 
-            {/* Card 4: Boas-Vindas Pendentes */}
-            <div className="relative overflow-hidden bg-card border border-border rounded-xl p-6 shadow-sm hover:border-violet-500/50 transition-all duration-300 group">
-              <div className="absolute top-0 right-0 h-24 w-24 bg-red-500/10 rounded-full blur-2xl group-hover:bg-red-500/20 transition-all"></div>
-              <div className="flex justify-between items-start">
-                <span className="text-sm font-medium text-muted-foreground">BVS Pendentes</span>
-                {dashboardData.bvsPendingCount > 0 ? (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-red-500/10 text-red-400 border border-red-500/20">
-                    ■ Pendências ({dashboardData.bvsPendingCount})
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    ● Em Dia (0)
-                  </span>
+            <div className="bg-card border border-border rounded-xl p-5 shadow-sm hover:border-foreground/20 transition-all">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Pendências BVS</span>
+                {dashboardData.bvsPendingCount > 0 && (
+                  <span className="text-xs font-semibold text-red-600 bg-red-500/10 px-2 py-0.5 rounded-full animate-pulse">Ação Req.</span>
                 )}
               </div>
-              <div className="mt-4">
-                <span className="text-3xl font-extrabold text-foreground">
+              <div>
+                <span className="text-3xl font-extrabold text-foreground tracking-tight">
                   {dashboardData.bvsPendingCount}
                 </span>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Alunos ativados aguardando recepção
+                <p className="mt-1 text-xs font-medium text-muted-foreground">
+                  Alunos aguardando recepção
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Grid de Seções Gráficos/Tabelas */}
-          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-            {/* Distribuição por Instituição */}
-            <div className="lg:col-span-2 bg-card border border-border rounded-xl p-6 shadow-sm">
-              <div className="flex items-center space-x-2">
-                <BookOpen className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-bold text-foreground">Desempenho por Instituição</h2>
+          {/* GRID ANALÍTICO (Gráficos Recharts) */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            {/* GRÁFICO PRINCIPAL: Faturamento por Vendedor (Área) */}
+            <div className="lg:col-span-2 bg-card border border-border rounded-xl shadow-sm p-6">
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-sm font-bold text-foreground flex items-center">
+                    <Activity className="w-4 h-4 mr-2 text-muted-foreground" />
+                    Performance de Faturamento (Vendedores)
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-1">Comparativo de receita gerada por colaborador ativo.</p>
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Comparativo de matrículas e faturamento válido consolidado entre parceiros educacionais.
-              </p>
-              <div className="mt-6 space-y-5">
-                {dashboardData.institutions.map((inst) => {
-                  const maxCents = Math.max(...dashboardData.institutions.map(i => i.amountCents)) || 1;
-                  const widthPercentage = Math.round((inst.amountCents / maxCents) * 100);
-                  
-                  return (
-                    <div key={inst.name}>
-                      <div className="flex justify-between text-sm font-medium mb-1.5">
-                        <span className="text-foreground">{inst.name}</span>
-                        <span className="text-muted-foreground">
-                          {inst.count} matrículas ({formatMoney(inst.amountCents)})
-                        </span>
-                      </div>
-                      <div className="w-full bg-secondary h-2.5 rounded-full overflow-hidden">
-                        <div 
-                          className="bg-gradient-to-r from-violet-500 to-indigo-500 h-full rounded-full transition-all duration-500" 
-                          style={{ width: `${widthPercentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })}
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={sellersChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                    <defs>
+                      <linearGradient id="colorFaturamento" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#18181b" stopOpacity={0.3}/>
+                        <stop offset="95%" stopColor="#18181b" stopOpacity={0}/>
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e4e4e7" />
+                    <XAxis 
+                      dataKey="name" 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: '#71717a' }} 
+                      dy={10}
+                    />
+                    <YAxis 
+                      axisLine={false} 
+                      tickLine={false} 
+                      tick={{ fontSize: 12, fill: '#71717a' }} 
+                      tickFormatter={(value) => `R$ ${value / 1000}k`}
+                    />
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                      formatter={(value: any) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0), 'Faturamento']}
+                    />
+                    <Area type="monotone" dataKey="faturamento" stroke="#18181b" strokeWidth={2} fillOpacity={1} fill="url(#colorFaturamento)" />
+                  </AreaChart>
+                </ResponsiveContainer>
               </div>
             </div>
 
-            {/* Desempenho Vendedores (Ranking) */}
-            <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
-              <div className="flex items-center space-x-2">
-                <Award className="h-5 w-5 text-muted-foreground" />
-                <h2 className="text-lg font-bold text-foreground">Ranking de Vendas</h2>
+            {/* GRÁFICO SECUNDÁRIO: Divisão por Instituição (Doughnut) */}
+            <div className="bg-card border border-border rounded-xl shadow-sm p-6 flex flex-col">
+              <div>
+                <h3 className="text-sm font-bold text-foreground">Market Share (Instituições)</h3>
+                <p className="text-xs text-muted-foreground mt-1">Faturamento válido distribuído por parceiro.</p>
               </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Lista ordenada de colaboradores por quantidade de matrículas registradas.
-              </p>
-              <div className="mt-6 space-y-4 max-h-[300px] overflow-y-auto pr-1">
-                {dashboardData.sellers.length === 0 ? (
-                  <p className="text-sm text-center text-muted-foreground py-8">
-                    Nenhuma venda registrada para este período.
-                  </p>
-                ) : (
-                  dashboardData.sellers.map((seller, idx) => {
-                    const isTop = idx === 0;
-                    return (
-                      <div key={seller.name} className="flex justify-between items-center pb-2 border-b border-border last:border-0 last:pb-0">
-                        <div className="flex items-center space-x-2">
-                          <span className={`text-xs font-bold px-1.5 py-0.5 rounded ${
-                            isTop ? 'bg-amber-500/20 text-amber-400' : 'bg-secondary text-muted-foreground'
-                          }`}>
-                            {idx + 1}
-                          </span>
-                          <span className="text-sm font-medium text-foreground">{seller.name}</span>
-                        </div>
-                        <div className="text-right">
-                          <span className="text-sm font-bold text-foreground block">{seller.count} vendas</span>
-                          <span className="text-[10px] text-muted-foreground block">{formatMoney(seller.amountCents)}</span>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
+              <div className="flex-1 flex items-center justify-center min-h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={institutionsChartData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={80}
+                      paddingAngle={2}
+                      dataKey="value"
+                      stroke="none"
+                    >
+                      {institutionsChartData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PIE_COLORS[index % PIE_COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', fontSize: '12px' }}
+                      formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0)}
+                    />
+                    <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
               </div>
             </div>
+
           </div>
+          
+          {/* TABELA DE MATRÍCULAS RECENTES (Simulação de Densidade de Dados) */}
+          <div className="bg-card border border-border rounded-xl shadow-sm overflow-hidden">
+            <div className="p-5 border-b border-border flex justify-between items-center bg-secondary/30">
+              <h3 className="text-sm font-bold text-foreground">Top Matrículas Recentes</h3>
+              <span className="text-xs font-medium text-muted-foreground">Mostrando top 5 do período</span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm text-left">
+                <thead className="text-[10px] uppercase tracking-wider text-muted-foreground bg-secondary/10">
+                  <tr>
+                    <th className="px-5 py-3 font-semibold">Instituição</th>
+                    <th className="px-5 py-3 font-semibold">Consultor (Vendedor)</th>
+                    <th className="px-5 py-3 font-semibold text-right">Faturamento Gerado</th>
+                    <th className="px-5 py-3 font-semibold text-center">Status BVS</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {dashboardData.sellers.slice(0, 5).map((seller, i) => (
+                    <tr key={i} className="hover:bg-secondary/30 transition-colors">
+                      <td className="px-5 py-4 font-medium text-foreground">UniFecaf</td>
+                      <td className="px-5 py-4 text-muted-foreground">{seller.name}</td>
+                      <td className="px-5 py-4 font-bold text-foreground text-right">{formatMoney(seller.amountCents)}</td>
+                      <td className="px-5 py-4 text-center">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-500/10 text-emerald-600">Enviado</span>
+                      </td>
+                    </tr>
+                  ))}
+                  {dashboardData.sellers.length === 0 && (
+                    <tr>
+                      <td colSpan={4} className="px-5 py-8 text-center text-muted-foreground">Sem dados suficientes para exibição.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
         </>
       ) : null}
     </div>

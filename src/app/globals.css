@@ -2,35 +2,35 @@
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
+    --background: 0 0% 98%; /* Cinza super claro, estilo Vercel */
+    --foreground: 240 5% 10%; /* Quase preto para alto contraste de leitura */
     
-    --card: 240 10% 3.9%;
-    --card-foreground: 0 0% 98%;
+    --card: 0 0% 100%; /* Branco puro */
+    --card-foreground: 240 5% 10%;
     
-    --popover: 240 10% 3.9%;
-    --popover-foreground: 0 0% 98%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 5% 10%;
     
-    --primary: 263.4 70% 50.4%;
-    --primary-foreground: 210 20% 98%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
     
-    --secondary: 240 3.7% 15.9%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
     
-    --muted: 240 3.7% 15.9%;
-    --muted-foreground: 240 5% 64.9%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
     
-    --accent: 240 3.7% 15.9%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
     
-    --destructive: 0 72.2% 50.6%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
     
-    --border: 240 3.7% 15.9%;
-    --input: 240 3.7% 15.9%;
-    --ring: 263.4 70% 50.4%;
+    --border: 240 5.9% 90%; /* Borda fina e precisa */
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
     
-    --radius: 0.5rem;
+    --radius: 0.5rem; /* Bordas menores, mais seriedade */
     
     --success: 142.1 76.2% 36.3%;
     --success-foreground: 355.7 100% 97.3%;
@@ -79,8 +79,14 @@
   --radius-sm: calc(var(--radius) - 4px);
 }
 
-body {
-  background-color: var(--color-background);
-  color: var(--color-foreground);
-  font-feature-settings: "rlig" 1, "calt" 1;
+@layer base {
+  /* Remove a barra de scroll nativa mas permite o scroll */
+  html, body {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  
+  ::-webkit-scrollbar {
+    display: none; /* Chrome, Safari and Opera */
+  }
 }
