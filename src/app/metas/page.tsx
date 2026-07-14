@@ -1,0 +1,264 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { getAvailableMonths, getDashboardData, DashboardData } from '@/server/actions/dashboard';
+import { 
+  Target, 
+  Users
+} from 'lucide-react';
+import { KpiCardSkeleton, TableSkeleton } from '@/components/shared/Skeleton';
+
+export default function MetasPage() {
+  const [availableMonths, setAvailableMonths] = useState<string[]>([]);
+  const [selectedMonth, setSelectedMonth] = useState('');
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  // Metas corporativas do MVP
+  const GOAL_REVENUE = 20000000; // R$ 200.000,00 em centavos
+  const GOAL_ENROLLMENTS = 150;
+  const SELLER_GOAL = 30; // Meta individual por vendedor
+
+  useEffect(() => {
+    async function loadData() {
+      setLoading(true);
+      setError(null);
+      try {
+        const isDemo = typeof window !== 'undefined' && localStorage.getItem('cies_demo_mode') === 'true';
+
+        if (isDemo) {
+          const { demoGetAvailableMonths, demoGetDashboardStats, demoGetBvsQueue } = await import('@/lib/demo-store');
+          const months = demoGetAvailableMonths();
+          setAvailableMonths(months);
+
+          const activeMonth = selectedMonth || months[0] || '';
+          setSelectedMonth(activeMonth);
+
+          if (activeMonth) {
+            const demoData = demoGetDashboardStats(activeMonth);
+            const { pending } = demoGetBvsQueue(activeMonth);
+            
+            setDashboardData({
+              referenceMonth: demoData.period,
+              totalEnrollments: demoData.totalEnrollments,
+              validAmountCents: demoData.validRevenueCents,
+              totalAmountCents: demoData.totalRevenueCents,
+              bvsPendingCount: pending.length,
+              institutions: demoData.byInstitution.map(i => ({
+                name: i.name,
+                count: i.count,
+                amountCents: i.revenueCents
+              })),
+              sellers: demoData.sellersRanking.map(s => ({
+                name: s.name,
+                count: s.count,
+                amountCents: s.revenueCents
+              }))
+            });
+          }
+        } else {
+          const months = await getAvailableMonths();
+          setAvailableMonths(months);
+
+          const activeMonth = selectedMonth || months[0] || '';
+          setSelectedMonth(activeMonth);
+
+          if (activeMonth) {
+            const data = await getDashboardData(activeMonth);
+            setDashboardData(data);
+          }
+        }
+      } catch (err) {
+        console.error('Falha ao carregar metas:', err);
+        setError('Ocorreu um erro ao carregar as metas e KPIs do período.');
+      } finally {
+        setLoading(false);
+      }
+    }
+    loadData();
+  }, [selectedMonth]);
+
+  // Formata o mês ex: "2026-06" para "Junho de 2026"
+  const formatMonthName = (monthStr: string) => {
+    if (!monthStr) return '';
+    const [year, monthNum] = monthStr.split('-');
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    const monthIndex = parseInt(monthNum, 10) - 1;
+    return `${months[monthIndex]} / ${year}`;
+  };
+
+  // Formata centavos para reais
+  const formatMoney = (cents: number) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+    }).format(cents / 100);
+  };
+
+  const validAmount = dashboardData ? dashboardData.validAmountCents : 0;
+  const totalEnrollments = dashboardData ? dashboardData.totalEnrollments : 0;
+
+  const revenuePercentage = Math.min(Math.round((validAmount / GOAL_REVENUE) * 100), 100);
+  const enrollmentsPercentage = Math.min(Math.round((totalEnrollments / GOAL_ENROLLMENTS) * 100), 100);
+
+  return (
+    <div className="space-y-8 animate-fade-in">
+      {/* Header e Período */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground flex items-center space-x-2">
+            <Target className="h-8 w-8 text-primary" />
+            <span>Metas & KPIs</span>
+          </h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Acompanhamento de metas corporativas e desempenho individual de consultores educacionais.
+          </p>
+        </div>
+
+        {availableMonths.length > 0 && (
+          <div className="flex items-center space-x-3 bg-card border border-border px-4 py-2 rounded-lg shadow-sm">
+            <label htmlFor="ref-month" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+              Período:
+            </label>
+            <select
+              id="ref-month"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value)}
+              className="bg-transparent text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-secondary rounded-sm cursor-pointer border-none p-0 pr-6 transition-all"
+            >
+              {availableMonths.map((m) => (
+                <option key={m} value={m} className="bg-card text-foreground">
+                  {formatMonthName(m)}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </div>
+
+      {error && (
+        <div className="bg-destructive/10 border border-destructive/20 text-destructive text-sm px-4 py-3 rounded-lg">
+          ⚠️ {error}
+        </div>
+      )}
+
+      {loading ? (
+        <div className="space-y-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <KpiCardSkeleton />
+            <KpiCardSkeleton />
+          </div>
+          <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+            <TableSkeleton rows={4} columns={3} />
+          </div>
+        </div>
+      ) : dashboardData ? (
+        <>
+          {/* Duas Metas Corporativas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Meta de Faturamento */}
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Meta de Faturamento Válido</span>
+                  <span className="text-3xl font-extrabold text-foreground block mt-1">{formatMoney(validAmount)}</span>
+                </div>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                  {revenuePercentage}% Atingido
+                </span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Progresso: {formatMoney(validAmount)}</span>
+                  <span>Meta: {formatMoney(GOAL_REVENUE)}</span>
+                </div>
+                <div className="w-full bg-secondary h-3 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-violet-500 to-indigo-500 h-full rounded-full transition-all duration-500" 
+                    style={{ width: `${revenuePercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+
+            {/* Meta de Matrículas */}
+            <div className="bg-card border border-border rounded-xl p-6 shadow-sm space-y-4">
+              <div className="flex justify-between items-start">
+                <div>
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider block">Meta de Volume de Matrículas</span>
+                  <span className="text-3xl font-extrabold text-foreground block mt-1">{totalEnrollments} Matrículas</span>
+                </div>
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                  {enrollmentsPercentage}% Atingido
+                </span>
+              </div>
+              <div className="space-y-2">
+                <div className="flex justify-between text-xs text-muted-foreground">
+                  <span>Progresso: {totalEnrollments}</span>
+                  <span>Meta: {GOAL_ENROLLMENTS}</span>
+                </div>
+                <div className="w-full bg-secondary h-3 rounded-full overflow-hidden">
+                  <div 
+                    className="bg-emerald-500 h-full rounded-full transition-all duration-500" 
+                    style={{ width: `${enrollmentsPercentage}%` }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Desempenho por Vendedor */}
+          <div className="bg-card border border-border rounded-xl p-6 shadow-sm space-y-6">
+            <div className="flex items-center space-x-2 border-b border-border pb-4">
+              <Users className="h-5 w-5 text-muted-foreground" />
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Acompanhamento dos Consultores</h2>
+                <p className="text-xs text-muted-foreground">Progresso individual baseado na meta de {SELLER_GOAL} matrículas válidas.</p>
+              </div>
+            </div>
+
+            {dashboardData.sellers.length === 0 ? (
+              <p className="text-sm text-center text-muted-foreground py-8">Nenhum consultor registrou vendas neste período.</p>
+            ) : (
+              <div className="space-y-6">
+                {dashboardData.sellers.map((seller) => {
+                  const percent = Math.min(Math.round((seller.count / SELLER_GOAL) * 100), 100);
+                  return (
+                    <div key={seller.name} className="space-y-2">
+                      <div className="flex justify-between text-sm">
+                        <div className="flex items-center space-x-2">
+                          <span className="font-semibold text-foreground">{seller.name}</span>
+                          <span className="text-xs text-muted-foreground">({formatMoney(seller.amountCents)})</span>
+                        </div>
+                        <span className="text-xs font-bold text-foreground">
+                          {seller.count} de {SELLER_GOAL} vendas ({percent}%)
+                        </span>
+                      </div>
+                      <div className="w-full bg-secondary h-2 rounded-full overflow-hidden">
+                        <div 
+                          className={`h-full rounded-full transition-all duration-500 ${
+                            percent >= 100 
+                              ? 'bg-amber-500' 
+                              : percent >= 70 
+                                ? 'bg-primary' 
+                                : 'bg-primary/50'
+                          }`}
+                          style={{ width: `${percent}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}

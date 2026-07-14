@@ -1,0 +1,7 @@
+{
+  "projects": {
+    "development": "cies-gestao-dev",
+    "staging": "cies-gestao-staging",
+    "production": "cies-gestao-prod"
+  }
+}
