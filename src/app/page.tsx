@@ -13,13 +13,11 @@ import { getAvailableMonths, getDashboardData, DashboardData } from '@/server/ac
 
 import { 
   FileSpreadsheet,
-  Award,
-  BookOpen,
   ChevronDown,
   Activity
 } from 'lucide-react';
 
-import { KpiCardSkeleton, TableSkeleton } from '../components/shared/Skeleton';
+import { KpiCardSkeleton } from '../components/shared/Skeleton';
 
 // Importação da biblioteca Recharts (Gráficos Profissionais)
 import {
@@ -33,9 +31,7 @@ import {
   PieChart,
   Pie,
   Cell,
-  Legend,
-  BarChart,
-  Bar
+  Legend
 } from 'recharts';
 
 export default function Home() {
@@ -367,7 +363,7 @@ export default function Home() {
                     />
                     <Tooltip 
                       contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: any) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0), 'Faturamento']}
+                      formatter={(value: number) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0), 'Faturamento']}
                     />
                     <Area type="monotone" dataKey="faturamento" stroke="#18181b" strokeWidth={2} fillOpacity={1} fill="url(#colorFaturamento)" />
                   </AreaChart>
@@ -400,7 +396,7 @@ export default function Home() {
                     </Pie>
                     <Tooltip 
                       contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', fontSize: '12px' }}
-                      formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0)}
+                      formatter={(value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0)}
                     />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                   </PieChart>

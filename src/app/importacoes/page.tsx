@@ -4,17 +4,13 @@ import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { validateUpload, confirmImport, ImportPreviewResult } from '@/server/actions/imports';
 import { 
-  Upload, 
   AlertTriangle, 
   CheckCircle, 
-  FileSpreadsheet, 
   ArrowRight,
   Database,
   ArrowLeft,
-  XCircle,
   FileUp
 } from 'lucide-react';
-import { TableSkeleton } from '../../components/shared/Skeleton';
 
 export default function ImportacoesPage() {
   const [step, setStep] = useState<'upload' | 'preview' | 'success'>('upload');
@@ -98,7 +94,7 @@ export default function ImportacoesPage() {
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('cies_demo_mode') === 'true';
       if (isDemo) {
         const { demoConfirmImport } = await import('@/lib/demo-store');
-        const summary = demoConfirmImport(previewData.referenceMonth, previewData.rows as any);
+        const summary = demoConfirmImport(previewData.referenceMonth, previewData.rows as unknown[]);
         setSuccessSummary({
           importId: summary.importId,
           insertedCount: summary.insertedCount,
