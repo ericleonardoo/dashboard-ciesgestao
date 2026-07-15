@@ -435,3 +435,63 @@ export function demoGetDashboardStats(month: string): DemoDashboardStats {
     sellersRanking
   };
 }
+
+// ============================================================================
+// MÓDULO: LEADS COMERCIAIS
+// ============================================================================
+
+import { Lead } from './validation/lead-schema';
+
+export function demoGetLeads(): Lead[] {
+  initDemoStore();
+  const raw = localStorage.getItem(LEADS_KEY);
+  if (!raw) return [];
+  return JSON.parse(raw) as Lead[];
+}
+
+export function demoCreateLead(leadData: Omit<Lead, 'id' | 'createdAt' | 'updatedAt'>): Lead {
+  initDemoStore();
+  const raw = localStorage.getItem(LEADS_KEY);
+  const leads: Lead[] = raw ? JSON.parse(raw) : [];
+  
+  const newLead: Lead = {
+    ...leadData,
+    id: `lead-demo-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  };
+  
+  leads.push(newLead);
+  localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
+  return newLead;
+}
+
+export function demoUpdateLead(id: string, leadData: Partial<Lead>): Lead {
+  initDemoStore();
+  const raw = localStorage.getItem(LEADS_KEY);
+  if (!raw) throw new Error('Demo Store não inicializada.');
+  
+  const leads: Lead[] = JSON.parse(raw);
+  const index = leads.findIndex(l => l.id === id);
+  if (index === -1) throw new Error('Lead não encontrado.');
+  
+  const updatedLead: Lead = {
+    ...leads[index],
+    ...leadData,
+    updatedAt: new Date().toISOString()
+  };
+  
+  leads[index] = updatedLead;
+  localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
+  return updatedLead;
+}
+
+export function demoDeleteLead(id: string): void {
+  initDemoStore();
+  const raw = localStorage.getItem(LEADS_KEY);
+  if (!raw) return;
+  
+  let leads: Lead[] = JSON.parse(raw);
+  leads = leads.filter(l => l.id !== id);
+  localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
+}
