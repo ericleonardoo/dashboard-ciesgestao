@@ -356,7 +356,7 @@ export default function Home() {
                       axisLine={false} 
                       tickLine={false} 
                       tick={{ fontSize: 12, fill: '#71717a' }} 
-                      tickFormatter={(value) => `R$ ${value / 1000}k`}
+                      tickFormatter={(value: number) => `R$ ${value / 1000}k`}
                     />
                     <Tooltip 
                       contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}

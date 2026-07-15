@@ -45,7 +45,7 @@
   - **Página de Metas & KPIs:** Interface gerencial em `/metas` para monitorar progresso do faturamento consolidado de matrículas válidas, volume total de vendas e as metas individuais dos vendedores com gráficos de barras.
 
 ## 3. Arquitetura Adotada
-- **Stack:** Next.js (App Router), TypeScript (Strict), Tailwind CSS, shadcn/ui.
+- **Stack:** Next.js (App Router), TypeScript (Strict), Tailwind CSS, Recharts (Gráficos), shadcn/ui.
 - **Backend:** Firebase Authentication + Cloud Firestore Native Mode + Firebase Admin SDK.
 - **Ambiente Local:** Firebase Local Emulator Suite (Firestore porta 8080, Auth porta 9099, UI porta 4000).
 - **Hospedagem:** Firebase App Hosting (proposto).

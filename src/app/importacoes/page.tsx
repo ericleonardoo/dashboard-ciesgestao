@@ -3,6 +3,7 @@
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
 import { validateUpload, confirmImport, ImportPreviewResult } from '@/server/actions/imports';
+import { EnrollmentItem } from '@/server/actions/enrollments';
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -95,8 +96,7 @@ export default function ImportacoesPage() {
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('cies_demo_mode') === 'true';
       if (isDemo) {
         const { demoConfirmImport } = await import('@/lib/demo-store');
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const summary = demoConfirmImport(previewData.referenceMonth, previewData.rows as any);
+        const summary = demoConfirmImport(previewData.referenceMonth, previewData.rows as unknown as Omit<EnrollmentItem, 'id' | 'createdAt' | 'auditLogs'>[]);
         setSuccessSummary({
           importId: summary.importId,
           insertedCount: summary.insertedCount,

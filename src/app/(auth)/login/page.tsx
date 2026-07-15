@@ -65,7 +65,7 @@ export default function LoginPage() {
     }
   };
 
-  const handleDemoAccess = async () => {
+  const handleDemoAccess = async (role: 'gestao' | 'relacionamento' | 'administrativo') => {
     setLoading(true);
     setError(null);
     try {
@@ -75,12 +75,14 @@ export default function LoginPage() {
         initDemoStore();
       }
 
+      const idToken = `demo-token-${role}`;
+
       const response = await fetch('/api/auth/session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ idToken: 'demo-token' }),
+        body: JSON.stringify({ idToken }),
       });
 
       if (!response.ok) {
@@ -181,14 +183,34 @@ export default function LoginPage() {
               <div className="flex-grow border-t border-border"></div>
             </div>
 
-            <button
-              type="button"
-              onClick={handleDemoAccess}
-              disabled={loading}
-              className="group relative w-full flex justify-center py-2 px-4 border border-border text-sm font-semibold rounded-lg text-foreground bg-secondary hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-50"
-            >
-              Acessar Modo de Demonstração (Local)
-            </button>
+            <div className="grid grid-cols-1 gap-2.5">
+              <button
+                type="button"
+                onClick={() => handleDemoAccess('gestao')}
+                disabled={loading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-border text-xs font-bold rounded-lg text-foreground bg-secondary hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-50"
+              >
+                Acessar como Gestor (Acesso Total)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDemoAccess('relacionamento')}
+                disabled={loading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-border text-xs font-bold rounded-lg text-foreground bg-secondary hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-50"
+              >
+                Acessar como Relacionamento
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleDemoAccess('administrativo')}
+                disabled={loading}
+                className="group relative w-full flex justify-center py-2 px-4 border border-border text-xs font-bold rounded-lg text-foreground bg-secondary hover:bg-secondary/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-all disabled:opacity-50"
+              >
+                Acessar como Administrativo
+              </button>
+            </div>
           </div>
         </form>
       </div>

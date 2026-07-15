@@ -1,12 +1,26 @@
-"use client";
-
+import React, { useEffect, useState } from 'react';
 import { LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { auth } from "@/lib/firebase/client";
 import { signOut } from "firebase/auth";
+import { getCurrentProfile } from "@/server/actions/users";
+import { UserPermissions } from "@/lib/firebase/auth-session";
 
 export default function UserProfileSidebar({ isCollapsed = false }: { isCollapsed?: boolean }) {
   const router = useRouter();
+  const [profile, setProfile] = useState<UserPermissions | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await getCurrentProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error("Falha ao obter perfil da barra de usuário:", err);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -21,17 +35,30 @@ export default function UserProfileSidebar({ isCollapsed = false }: { isCollapse
     }
   };
 
+  const getRoleLabel = () => {
+    if (!profile) return 'Carregando...';
+    const areas = profile.areas || [];
+    if (areas.includes('gestao')) return 'Gestão (Admin)';
+    if (areas.includes('relacionamento')) return 'Relacionamento';
+    if (areas.includes('administrativo')) return 'Administrativo';
+    return 'Colaborador';
+  };
+
   return (
     <div className={`flex items-center w-full ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
       {!isCollapsed && (
         <div className="ml-3 truncate">
-          <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">Eric Carvalho</p>
-          <p className="text-xs font-medium text-muted-foreground truncate">Gestão (Admin)</p>
+          <p className="text-sm font-bold text-foreground group-hover:text-primary transition-colors truncate">
+            {profile ? profile.name : 'Carregando...'}
+          </p>
+          <p className="text-xs font-medium text-muted-foreground truncate">
+            {getRoleLabel()}
+          </p>
         </div>
       )}
       <button 
         onClick={handleLogout}
-        className={`p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all duration-300 flex-shrink-0 ${isCollapsed ? '' : ''}`}
+        className="p-2 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all duration-300 flex-shrink-0"
         title="Sair do sistema"
       >
         <LogOut className="h-5 w-5" />

@@ -28,8 +28,12 @@ export interface UserPermissions {
 export async function createSession(idToken: string): Promise<void> {
   let sessionCookie = '';
   
-  if (idToken === 'demo-token') {
-    sessionCookie = 'demo-session-cookie';
+  if (idToken === 'demo-token' || idToken === 'demo-token-gestao') {
+    sessionCookie = 'demo-session-gestao';
+  } else if (idToken === 'demo-token-relacionamento') {
+    sessionCookie = 'demo-session-relacionamento';
+  } else if (idToken === 'demo-token-administrativo') {
+    sessionCookie = 'demo-session-administrativo';
   } else {
     const expiresIn = 60 * 60 * 24 * 5 * 1000; // 5 dias em milissegundos
     sessionCookie = await getAdminAuth().createSessionCookie(idToken, { expiresIn });
@@ -52,7 +56,7 @@ export async function destroySession(): Promise<void> {
   const cookieStore = await cookies();
   const sessionCookie = cookieStore.get(COOKIE_NAME)?.value;
 
-  if (sessionCookie && sessionCookie !== 'demo-session-cookie') {
+  if (sessionCookie && !sessionCookie.startsWith('demo-session-')) {
     try {
       // Verifica e decodifica o cookie para obter o UID
       const decodedClaims = await getAdminAuth().verifySessionCookie(sessionCookie);
@@ -79,11 +83,27 @@ export async function getSession(): Promise<UserSession | null> {
     return null;
   }
 
-  if (sessionCookie === 'demo-session-cookie') {
+  if (sessionCookie === 'demo-session-gestao') {
     return {
       uid: 'demo-user-gestao',
-      email: 'demo@ciesmg.com.br',
-      name: 'Demonstração Local',
+      email: 'gestao@ciesmg.com.br',
+      name: 'Demonstração (Gestão)',
+    };
+  }
+
+  if (sessionCookie === 'demo-session-relacionamento') {
+    return {
+      uid: 'demo-user-relacionamento',
+      email: 'relacionamento@ciesmg.com.br',
+      name: 'Demonstração (Relacionamento)',
+    };
+  }
+
+  if (sessionCookie === 'demo-session-administrativo') {
+    return {
+      uid: 'demo-user-administrativo',
+      email: 'admin@ciesmg.com.br',
+      name: 'Demonstração (Administrativo)',
     };
   }
 
@@ -114,10 +134,32 @@ export async function getCurrentUserPermissions(): Promise<UserPermissions | nul
   if (session.uid === 'demo-user-gestao') {
     return {
       uid: 'demo-user-gestao',
-      name: 'Demonstração Local',
-      email: 'demo@ciesmg.com.br',
+      name: 'Demonstração (Gestão)',
+      email: 'gestao@ciesmg.com.br',
       status: 'active',
       areas: ['gestao'],
+      permissions: {},
+    };
+  }
+
+  if (session.uid === 'demo-user-relacionamento') {
+    return {
+      uid: 'demo-user-relacionamento',
+      name: 'Demonstração (Relacionamento)',
+      email: 'relacionamento@ciesmg.com.br',
+      status: 'active',
+      areas: ['relacionamento'],
+      permissions: {},
+    };
+  }
+
+  if (session.uid === 'demo-user-administrativo') {
+    return {
+      uid: 'demo-user-administrativo',
+      name: 'Demonstração (Administrativo)',
+      email: 'admin@ciesmg.com.br',
+      status: 'active',
+      areas: ['administrativo'],
       permissions: {},
     };
   }

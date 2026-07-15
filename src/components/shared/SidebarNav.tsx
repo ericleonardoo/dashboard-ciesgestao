@@ -10,9 +10,11 @@
  * (Dashboard, Matrículas, Importações, etc).
  */
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getCurrentProfile } from '@/server/actions/users';
+import { UserPermissions } from '@/lib/firebase/auth-session';
 import { 
   LayoutDashboard, 
   GraduationCap, 
@@ -48,12 +50,72 @@ const NAV_ITEMS: NavItem[] = [
 ];
 
 export default function SidebarNav({ isCollapsed = false }: { isCollapsed?: boolean }) {
-  // Pega a URL atual (ex: se estiver na página de metas, o pathname será "/metas")
   const pathname = usePathname();
+  const [profile, setProfile] = useState<UserPermissions | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await getCurrentProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error('Falha ao obter perfil para menu:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <nav className={`mt-8 flex-1 space-y-3 ${isCollapsed ? 'px-0' : 'px-4'}`}>
+        {[1, 2, 3, 4].map((i) => (
+          <div 
+            key={i} 
+            className={`bg-secondary/40 animate-pulse rounded-xl ${
+              isCollapsed ? 'w-11 h-11' : 'h-10 w-full'
+            }`}
+          />
+        ))}
+      </nav>
+    );
+  }
+
+  const visibleItems = NAV_ITEMS.filter((item) => {
+    // Dashboard e Matrículas aparecem para todos
+    if (item.href === '/' || item.href === '/matriculas') {
+      return true;
+    }
+
+    if (!profile) {
+      return false;
+    }
+
+    const areas = profile.areas || [];
+
+    // Se for Gestão, vê tudo
+    if (areas.includes('gestao')) {
+      return true;
+    }
+
+    if (item.href === '/importacoes') {
+      return areas.includes('administrativo');
+    }
+    if (item.href === '/relacionamento') {
+      return areas.includes('relacionamento');
+    }
+    if (item.href === '/metas' || item.href === '/colaboradores') {
+      return false;
+    }
+
+    return false;
+  });
 
   return (
     <nav className={`mt-8 flex-1 space-y-1.5 ${isCollapsed ? 'flex flex-col items-center px-0' : 'px-2'}`}>
-      {NAV_ITEMS.map((item) => {
+      {visibleItems.map((item) => {
         const isActive =
           item.href === '/'
             ? pathname === '/'
