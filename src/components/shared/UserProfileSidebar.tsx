@@ -38,10 +38,11 @@ export default function UserProfileSidebar({ isCollapsed = false }: { isCollapse
   const getRoleLabel = () => {
     if (!profile) return 'Carregando...';
     const areas = profile.areas || [];
-    if (areas.includes('gestao')) return 'Gestão (Admin)';
-    if (areas.includes('relacionamento')) return 'Relacionamento';
-    if (areas.includes('administrativo')) return 'Administrativo';
-    return 'Colaborador';
+    const roles: string[] = [];
+    if (areas.includes('gestao')) roles.push('Gestão (Admin)');
+    if (areas.includes('relacionamento')) roles.push('Relacionamento');
+    if (areas.includes('administrativo')) roles.push('Administrativo');
+    return `Cargo: ${roles.join(', ') || 'Colaborador'}`;
   };
 
   return (

@@ -1,29 +1,25 @@
 import React from 'react';
 import { getColaboradores } from '@/server/actions/users';
 import CreateColaboradorForm from '@/components/colaboradores/CreateColaboradorForm';
+import { getCurrentUserPermissions } from '@/lib/firebase/auth-session';
+import RestrictedAccess from '@/components/shared/RestrictedAccess';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ColaboradoresPage() {
-  let colaboradores: Awaited<ReturnType<typeof getColaboradores>> = [];
-  let errorMsg: string | null = null;
+  const profile = await getCurrentUserPermissions();
+  const hasAccess = profile && profile.areas.includes('gestao');
 
+  if (!hasAccess) {
+    const currentRole = profile ? profile.areas[0] || 'colaborador' : 'colaborador';
+    return <RestrictedAccess allowedRoles={['gestao']} currentRole={currentRole} />;
+  }
+
+  let colaboradores: Awaited<ReturnType<typeof getColaboradores>> = [];
   try {
     colaboradores = await getColaboradores();
   } catch (err) {
-    errorMsg = err instanceof Error ? err.message : 'Você não tem permissão para acessar esta área.';
-  }
-
-  if (errorMsg) {
-    return (
-      <div className="min-h-[50vh] flex flex-col items-center justify-center space-y-4">
-        <div className="text-4xl">🔒</div>
-        <h2 className="text-xl font-bold text-foreground">Acesso Negado</h2>
-        <p className="text-sm text-muted-foreground max-w-md text-center">
-          {errorMsg} Caso ache que isso seja um erro, contate o administrador da CIES.
-        </p>
-      </div>
-    );
+    console.error('Falha ao obter colaboradores:', err);
   }
 
   return (

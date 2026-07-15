@@ -14,8 +14,14 @@ import {
 } from 'lucide-react';
 import PeriodSelector from '@/components/shared/PeriodSelector';
 import { TableSkeleton } from '../../components/shared/Skeleton';
+import { getCurrentProfile } from '@/server/actions/users';
+import { UserPermissions } from '@/lib/firebase/auth-session';
+import RestrictedAccess from '@/components/shared/RestrictedAccess';
 
 export default function RelacionamentoPage() {
+  const [profile, setProfile] = useState<UserPermissions | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [activeTab, setActiveTab] = useState<'pending' | 'sent'>('pending');
@@ -25,6 +31,20 @@ export default function RelacionamentoPage() {
   const [loading, setLoading] = useState(false);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await getCurrentProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error('Erro ao ler perfil:', err);
+      } finally {
+        setProfileLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   // 1. Carrega os meses disponíveis na montagem do componente
   useEffect(() => {
@@ -157,6 +177,22 @@ export default function RelacionamentoPage() {
       setActionLoadingId(null);
     }
   };
+
+  if (profileLoading) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <TableSkeleton rows={8} columns={4} />
+        </div>
+      </div>
+    );
+  }
+
+  const hasAccess = profile && (profile.areas.includes('gestao') || profile.areas.includes('relacionamento'));
+  if (!hasAccess) {
+    const currentRole = profile ? profile.areas[0] || 'colaborador' : 'colaborador';
+    return <RestrictedAccess allowedRoles={['gestao', 'relacionamento']} currentRole={currentRole} />;
+  }
 
   return (
     <div className="space-y-8 animate-fade-in max-w-7xl mx-auto">

@@ -8,8 +8,14 @@ import {
 } from 'lucide-react';
 import PeriodSelector from '@/components/shared/PeriodSelector';
 import { KpiCardSkeleton, TableSkeleton } from '@/components/shared/Skeleton';
+import { getCurrentProfile } from '@/server/actions/users';
+import { UserPermissions } from '@/lib/firebase/auth-session';
+import RestrictedAccess from '@/components/shared/RestrictedAccess';
 
 export default function MetasPage() {
+  const [profile, setProfile] = useState<UserPermissions | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
@@ -21,6 +27,20 @@ export default function MetasPage() {
   const GOAL_REVENUE = 20000000; // R$ 200.000,00 em centavos
   const GOAL_ENROLLMENTS = 150;
   const SELLER_GOAL = 30; // Meta individual por vendedor
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await getCurrentProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error('Erro ao ler perfil:', err);
+      } finally {
+        setProfileLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   useEffect(() => {
     async function loadData() {
@@ -112,6 +132,22 @@ export default function MetasPage() {
 
   const revenuePercentage = Math.min(Math.round((validAmount / GOAL_REVENUE) * 100), 100);
   const enrollmentsPercentage = Math.min(Math.round((totalEnrollments / GOAL_ENROLLMENTS) * 100), 100);
+
+  if (profileLoading) {
+    return (
+      <div className="space-y-6 max-w-7xl mx-auto">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <TableSkeleton rows={8} columns={4} />
+        </div>
+      </div>
+    );
+  }
+
+  const hasAccess = profile && profile.areas.includes('gestao');
+  if (!hasAccess) {
+    const currentRole = profile ? profile.areas[0] || 'colaborador' : 'colaborador';
+    return <RestrictedAccess allowedRoles={['gestao']} currentRole={currentRole} />;
+  }
 
   return (
     <div className="space-y-8 animate-fade-in">

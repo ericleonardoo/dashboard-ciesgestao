@@ -1,9 +1,13 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { validateUpload, confirmImport, ImportPreviewResult } from '@/server/actions/imports';
 import { EnrollmentItem } from '@/server/actions/enrollments';
+import { getCurrentProfile } from '@/server/actions/users';
+import { UserPermissions } from '@/lib/firebase/auth-session';
+import RestrictedAccess from '@/components/shared/RestrictedAccess';
+import { TableSkeleton } from '@/components/shared/Skeleton';
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -15,6 +19,9 @@ import {
 import MonthPicker from '@/components/shared/MonthPicker';
 
 export default function ImportacoesPage() {
+  const [profile, setProfile] = useState<UserPermissions | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
+
   const [step, setStep] = useState<'upload' | 'preview' | 'success'>('upload');
   const [referenceMonth, setReferenceMonth] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -25,6 +32,20 @@ export default function ImportacoesPage() {
   
   const [previewData, setPreviewData] = useState<ImportPreviewResult | null>(null);
   const [successSummary, setSuccessSummary] = useState<{ importId: string; insertedCount: number } | null>(null);
+
+  useEffect(() => {
+    async function fetchProfile() {
+      try {
+        const data = await getCurrentProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error('Erro ao ler perfil:', err);
+      } finally {
+        setProfileLoading(false);
+      }
+    }
+    fetchProfile();
+  }, []);
 
   const formatMoney = (cents: number) => {
     return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(cents / 100);
@@ -131,6 +152,22 @@ export default function ImportacoesPage() {
       fileInputRef.current.value = '';
     }
   };
+
+  if (profileLoading) {
+    return (
+      <div className="space-y-6 max-w-4xl mx-auto pb-12">
+        <div className="bg-card border border-border rounded-xl p-6 shadow-sm">
+          <TableSkeleton rows={8} columns={4} />
+        </div>
+      </div>
+    );
+  }
+
+  const hasAccess = profile && (profile.areas.includes('gestao') || profile.areas.includes('administrativo'));
+  if (!hasAccess) {
+    const currentRole = profile ? profile.areas[0] || 'colaborador' : 'colaborador';
+    return <RestrictedAccess allowedRoles={['gestao', 'administrativo']} currentRole={currentRole} />;
+  }
 
   return (
     <div className="space-y-8 animate-fade-in max-w-4xl mx-auto pb-12">
