@@ -94,7 +94,8 @@ export default function ImportacoesPage() {
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('cies_demo_mode') === 'true';
       if (isDemo) {
         const { demoConfirmImport } = await import('@/lib/demo-store');
-        const summary = demoConfirmImport(previewData.referenceMonth, previewData.rows as unknown[]);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const summary = demoConfirmImport(previewData.referenceMonth, previewData.rows as any);
         setSuccessSummary({
           importId: summary.importId,
           insertedCount: summary.insertedCount,

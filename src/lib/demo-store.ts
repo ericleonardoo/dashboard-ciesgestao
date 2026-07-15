@@ -18,10 +18,37 @@ const ENROLLMENTS_KEY = 'cies_demo_enrollments';
 const MONTHS_KEY = 'cies_demo_months';
 const BATCHES_KEY = 'cies_demo_batches';
 
+// Novas chaves do LocalStorage
+const LEADS_KEY = 'cies_demo_leads';
+const PARTNERSHIPS_KEY = 'cies_demo_partnerships';
+const CAMPAIGNS_KEY = 'cies_demo_campaigns';
+const ACTION_PLANS_KEY = 'cies_demo_action_plans';
+const CASES_KEY = 'cies_demo_cases';
+
 /**
  * Seed inicial para o Modo de Demonstração
  */
 const INITIAL_MONTHS = ['2026-07', '2026-06'];
+
+const INITIAL_LEADS = [
+  { id: 'lead-1', name: 'João da Silva', phone: '11999999999', interest: 'Psicologia', origin: 'meta_ads', status: 'novo', createdAt: new Date().toISOString() }
+];
+
+const INITIAL_PARTNERSHIPS = [
+  { id: 'part-1', companyName: 'Tech Corp', contactName: 'Marta', contactPhone: '11988887777', ciesResponsibleId: 'eric', status: 'ativo', visitsCompleted: 2, conversionStats: { leadsGenerated: 15, enrollmentsClosed: 5 }, createdAt: new Date().toISOString() }
+];
+
+const INITIAL_CAMPAIGNS = [
+  { id: 'camp-1', name: 'Bolsa 50% Julho', channel: 'instagram', startDate: '2026-07-01', costCents: 50000, leadsAttracted: 120, enrollmentsClosed: 10, createdAt: new Date().toISOString() }
+];
+
+const INITIAL_PLANS = [
+  { id: 'plan-1', what: 'Treinamento de Vendas', why: 'Aumentar conversão', where: 'Sede CIES', when: '2026-08-10', who: 'Gestão', how: 'Workshop presencial', howMuchCents: 0, status: 'pendente', createdAt: new Date().toISOString() }
+];
+
+const INITIAL_CASES = [
+  { id: 'case-1', studentName: 'Bruno Alencar Ramos', studentCpf: '98765432100', category: 'financeiro', status: 'aberto', description: 'Aluno perdeu o emprego e quer trancar o curso.', createdAt: new Date().toISOString() }
+];
 
 const INITIAL_ENROLLMENTS: EnrollmentItem[] = [
   {
@@ -132,15 +159,22 @@ const INITIAL_ENROLLMENTS: EnrollmentItem[] = [
 export function initDemoStore() {
   if (typeof window === 'undefined') return;
 
-  if (!localStorage.getItem(MONTHS_KEY)) {
-    localStorage.setItem(MONTHS_KEY, JSON.stringify(INITIAL_MONTHS));
-  }
   if (!localStorage.getItem(ENROLLMENTS_KEY)) {
     localStorage.setItem(ENROLLMENTS_KEY, JSON.stringify(INITIAL_ENROLLMENTS));
+  }
+  if (!localStorage.getItem(MONTHS_KEY)) {
+    localStorage.setItem(MONTHS_KEY, JSON.stringify(INITIAL_MONTHS));
   }
   if (!localStorage.getItem(BATCHES_KEY)) {
     localStorage.setItem(BATCHES_KEY, JSON.stringify([]));
   }
+
+  // Inicializa novos módulos
+  if (!localStorage.getItem(LEADS_KEY)) localStorage.setItem(LEADS_KEY, JSON.stringify(INITIAL_LEADS));
+  if (!localStorage.getItem(PARTNERSHIPS_KEY)) localStorage.setItem(PARTNERSHIPS_KEY, JSON.stringify(INITIAL_PARTNERSHIPS));
+  if (!localStorage.getItem(CAMPAIGNS_KEY)) localStorage.setItem(CAMPAIGNS_KEY, JSON.stringify(INITIAL_CAMPAIGNS));
+  if (!localStorage.getItem(ACTION_PLANS_KEY)) localStorage.setItem(ACTION_PLANS_KEY, JSON.stringify(INITIAL_PLANS));
+  if (!localStorage.getItem(CASES_KEY)) localStorage.setItem(CASES_KEY, JSON.stringify(INITIAL_CASES));
 }
 
 /**

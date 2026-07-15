@@ -24,6 +24,12 @@ export interface DashboardData {
   bvsPendingCount: number;
   institutions: DashboardInstitutionStat[];
   sellers: DashboardSellerStat[];
+  marketingRoi: number;
+  marketingCostPerEnrollment: number;
+  leadsConversionRate: number;
+  activePartnershipsCount: number;
+  actionPlansPending: number;
+  criticalCasesOpen: number;
 }
 
 /**
@@ -165,6 +171,12 @@ export async function getDashboardData(referenceMonth: string): Promise<Dashboar
       bvsPendingCount,
       institutions,
       sellers,
+      marketingRoi: 0,
+      marketingCostPerEnrollment: 0,
+      leadsConversionRate: 0,
+      activePartnershipsCount: 0,
+      actionPlansPending: 0,
+      criticalCasesOpen: 0,
     };
   } catch (error) {
     console.error('Erro ao carregar dados do dashboard no servidor:', error);

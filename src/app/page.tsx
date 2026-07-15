@@ -14,7 +14,9 @@ import { getAvailableMonths, getDashboardData, DashboardData } from '@/server/ac
 import { 
   FileSpreadsheet,
   ChevronDown,
-  Activity
+  Activity,
+  AlertOctagon,
+  ListTodo
 } from 'lucide-react';
 
 import { KpiCardSkeleton } from '../components/shared/Skeleton';
@@ -76,7 +78,13 @@ export default function Home() {
                 name: s.name,
                 count: s.count,
                 amountCents: s.revenueCents
-              }))
+              })),
+              marketingRoi: 0,
+              marketingCostPerEnrollment: 0,
+              leadsConversionRate: 0,
+              activePartnershipsCount: 0,
+              actionPlansPending: 0,
+              criticalCasesOpen: 0
             });
           }
         } else {
@@ -248,6 +256,34 @@ export default function Home() {
         </div>
       )}
 
+      {/* Alertas de Operação (MVP) */}
+      {!loading && dashboardData && (dashboardData.actionPlansPending > 0 || dashboardData.criticalCasesOpen > 0) && (
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          {dashboardData.actionPlansPending > 0 && (
+            <div className="flex-1 bg-amber-50/50 border border-amber-200 p-4 rounded-xl flex items-start gap-3">
+              <div className="p-2 bg-amber-100 rounded-lg shrink-0">
+                <ListTodo className="w-5 h-5 text-amber-700" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-amber-900">Planos de Ação Pendentes</h4>
+                <p className="text-xs text-amber-800 mt-0.5">Existem {dashboardData.actionPlansPending} plano(s) de ação aguardando conclusão.</p>
+              </div>
+            </div>
+          )}
+          {dashboardData.criticalCasesOpen > 0 && (
+            <div className="flex-1 bg-red-50/50 border border-red-200 p-4 rounded-xl flex items-start gap-3">
+              <div className="p-2 bg-red-100 rounded-lg shrink-0">
+                <AlertOctagon className="w-5 h-5 text-red-700" />
+              </div>
+              <div>
+                <h4 className="text-sm font-bold text-red-900">Casos Críticos Abertos</h4>
+                <p className="text-xs text-red-800 mt-0.5">Há {dashboardData.criticalCasesOpen} caso(s) de relacionamento precisando de atenção imediata.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {loading ? (
         <div className="space-y-8">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -363,7 +399,8 @@ export default function Home() {
                     />
                     <Tooltip 
                       contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                      formatter={(value: number) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0), 'Faturamento']}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      formatter={(value: any) => [new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0), 'Faturamento']}
                     />
                     <Area type="monotone" dataKey="faturamento" stroke="#18181b" strokeWidth={2} fillOpacity={1} fill="url(#colorFaturamento)" />
                   </AreaChart>
@@ -396,7 +433,8 @@ export default function Home() {
                     </Pie>
                     <Tooltip 
                       contentStyle={{ borderRadius: '8px', border: '1px solid #e4e4e7', fontSize: '12px' }}
-                      formatter={(value: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0)}
+                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                      formatter={(value: any) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(Number(value) || 0)}
                     />
                     <Legend iconType="circle" wrapperStyle={{ fontSize: '12px' }} />
                   </PieChart>

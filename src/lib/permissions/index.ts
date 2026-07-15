@@ -48,6 +48,23 @@ export function hasPermission(
     }
   }
 
+  // Novos módulos
+  if (module === 'leads') {
+    return user.areas.some(area => ['comercial', 'marketing', 'relacionamento'].includes(area));
+  }
+  if (module === 'partnerships') {
+    return user.areas.some(area => ['comercial', 'administrativo'].includes(area));
+  }
+  if (module === 'campaigns') {
+    return user.areas.some(area => ['marketing', 'comercial'].includes(area));
+  }
+  if (module === 'action-plans') {
+    return user.areas.some(area => ['comercial', 'administrativo', 'marketing', 'relacionamento'].includes(area));
+  }
+  if (module === 'relationship-cases') {
+    return user.areas.some(area => ['relacionamento', 'administrativo'].includes(area));
+  }
+
   return false;
 }
 

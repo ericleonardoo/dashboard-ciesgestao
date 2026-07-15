@@ -55,7 +55,13 @@ export default function MetasPage() {
                 name: s.name,
                 count: s.count,
                 amountCents: s.revenueCents
-              }))
+              })),
+              marketingRoi: 0,
+              marketingCostPerEnrollment: 0,
+              leadsConversionRate: 0,
+              activePartnershipsCount: 0,
+              actionPlansPending: 0,
+              criticalCasesOpen: 0
             });
           }
         } else {

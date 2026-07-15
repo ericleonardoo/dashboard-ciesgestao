@@ -19,7 +19,12 @@ import {
   FileUp, 
   Users, 
   Target, 
-  Briefcase 
+  Briefcase,
+  Megaphone,
+  Handshake,
+  ListTodo,
+  Headset,
+  UserPlus
 } from 'lucide-react';
 
 interface NavItem {
@@ -30,9 +35,14 @@ interface NavItem {
 
 const NAV_ITEMS: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+  { name: 'Leads (Comercial)', href: '/leads', icon: UserPlus },
   { name: 'Matrículas', href: '/matriculas', icon: GraduationCap },
   { name: 'Importações', href: '/importacoes', icon: FileUp },
+  { name: 'Marketing', href: '/marketing', icon: Megaphone },
+  { name: 'Convênios', href: '/convenios', icon: Handshake },
+  { name: 'Planos 5W2H', href: '/planos-acao', icon: ListTodo },
   { name: 'Relacionamento', href: '/relacionamento', icon: Users },
+  { name: 'Casos Críticos', href: '/relacionamento/casos', icon: Headset },
   { name: 'Metas & KPIs', href: '/metas', icon: Target },
   { name: 'Colaboradores', href: '/colaboradores', icon: Briefcase },
 ];
