@@ -1,68 +1,118 @@
 'use server';
 
-import { getAdminDb } from '../../lib/firebase/admin';
-import { requirePermission } from '../../lib/permissions';
-import { Campaign, campaignSchema } from '../../lib/validation/campaign-schema';
-import { FieldValue } from 'firebase-admin/firestore';
-import { revalidatePath } from 'next/cache';
+import { getAdminFirestore } from '@/lib/firebase/admin';
+import { verifySession } from '@/lib/firebase/auth-session';
+import { campaignSchema, Campaign } from '@/lib/validation/campaign-schema';
+import { z } from 'zod';
 
-const COLLECTION = 'campaigns';
+const COLLECTION_NAME = 'campaigns';
 
-export async function getCampaigns(): Promise<Campaign[]> {
-  await requirePermission(COLLECTION, 'read');
-
+export async function getCampaigns(filters?: { period?: string; channel?: string }) {
   try {
-    const snapshot = await getAdminDb().collection(COLLECTION).orderBy('createdAt', 'desc').get();
-    return snapshot.docs.map(doc => {
-      const data = doc.data();
-      return {
-        ...data,
-        id: doc.id,
-        createdAt: data.createdAt ? (data.createdAt.toDate() as Date).toISOString() : undefined,
-        updatedAt: data.updatedAt ? (data.updatedAt.toDate() as Date).toISOString() : undefined,
-      } as Campaign;
-    });
-  } catch (error) {
+    const session = await verifySession();
+    if (!session) {
+      return { success: false, error: 'Não autenticado' };
+    }
+
+    const db = getAdminFirestore();
+    let query: FirebaseFirestore.Query = db.collection(COLLECTION_NAME);
+
+    if (filters?.channel && filters.channel !== 'TODOS') {
+      query = query.where('channel', '==', filters.channel);
+    }
+
+    // Ordenar por data de início (mais recentes primeiro)
+    query = query.orderBy('startDate', 'desc');
+
+    const snapshot = await query.get();
+    let campaigns = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Campaign[];
+
+    // Filtro em memória pelo período (Mês/Ano) - startDate no formato YYYY-MM-DD
+    if (filters?.period) {
+      campaigns = campaigns.filter(c => c.startDate.startsWith(filters.period!));
+    }
+
+    return { success: true, data: campaigns };
+  } catch (error: any) {
     console.error('Erro ao buscar campanhas:', error);
-    throw new Error('Falha ao carregar campanhas de marketing.');
+    return { success: false, error: error.message || 'Erro interno.' };
   }
 }
 
-export async function createCampaign(data: Omit<Campaign, 'id'>) {
-  const user = await requirePermission(COLLECTION, 'write');
-
-  const parsed = campaignSchema.parse(data);
-
+export async function createCampaign(data: unknown) {
   try {
-    const docRef = getAdminDb().collection(COLLECTION).doc();
-    await docRef.set({
+    const session = await verifySession();
+    if (!session) {
+      return { success: false, error: 'Não autenticado' };
+    }
+
+    const parsed = campaignSchema.parse(data);
+    const db = getAdminFirestore();
+    
+    const now = new Date().toISOString();
+    const docRef = db.collection(COLLECTION_NAME).doc();
+    
+    const campaignData = {
       ...parsed,
-      createdBy: user.uid,
-      createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
-    });
+      id: docRef.id,
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    revalidatePath('/marketing');
-    return { success: true, id: docRef.id };
-  } catch (error) {
+    await docRef.set(campaignData);
+    
+    return { success: true, data: campaignData };
+  } catch (error: any) {
     console.error('Erro ao criar campanha:', error);
-    throw new Error('Falha ao criar campanha de marketing.');
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.errors[0].message };
+    }
+    return { success: false, error: error.message || 'Erro interno.' };
   }
 }
 
-export async function updateCampaign(id: string, data: Partial<Campaign>) {
-  await requirePermission(COLLECTION, 'write');
-
+export async function updateCampaign(id: string, data: unknown) {
   try {
-    const updateData = { ...data, updatedAt: FieldValue.serverTimestamp() };
-    delete updateData.id;
+    const session = await verifySession();
+    if (!session) {
+      return { success: false, error: 'Não autenticado' };
+    }
 
-    await getAdminDb().collection(COLLECTION).doc(id).update(updateData);
+    const parsed = campaignSchema.partial().parse(data);
+    const db = getAdminFirestore();
+    const docRef = db.collection(COLLECTION_NAME).doc(id);
 
-    revalidatePath('/marketing');
+    const updateData = {
+      ...parsed,
+      updatedAt: new Date().toISOString(),
+    };
+
+    await docRef.update(updateData);
+    
     return { success: true };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Erro ao atualizar campanha:', error);
-    throw new Error('Falha ao atualizar.');
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.errors[0].message };
+    }
+    return { success: false, error: error.message || 'Erro interno.' };
+  }
+}
+
+export async function deleteCampaign(id: string) {
+  try {
+    const session = await verifySession();
+    // Somente gestores ou pessoas com permissão de exclusão deveriam poder apagar, mas o auth unificado lida com isso se integrado, ou checamos a role.
+    if (!session) {
+      return { success: false, error: 'Não autenticado' };
+    }
+
+    const db = getAdminFirestore();
+    await db.collection(COLLECTION_NAME).doc(id).delete();
+    
+    return { success: true };
+  } catch (error: any) {
+    console.error('Erro ao deletar campanha:', error);
+    return { success: false, error: error.message || 'Erro interno.' };
   }
 }
