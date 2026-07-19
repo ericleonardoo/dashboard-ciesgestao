@@ -320,6 +320,7 @@ export function demoConfirmImport(month: string, rows: Omit<EnrollmentItem, 'id'
     const newEnrollment: EnrollmentItem = {
       ...row,
       id: `demo-enroll-${importId}-${i}`,
+      referenceMonth: month,
       bvsStatus: row.bvsStatus || 'NÃO INFORMADO',
       releaseStatus: row.releaseStatus || 'NÃO INFORMADO',
       isDbDuplicate: isDuplicate,

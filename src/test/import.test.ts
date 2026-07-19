@@ -3,7 +3,8 @@ import {
   parseCurrencyToCents, 
   normalizeInstitution, 
   normalizeTriState,
-  enrollmentRowSchema
+  enrollmentRowSchema,
+  normalizeReferenceMonth
 } from '../lib/validation/enrollment-schema';
 import { generateHmacSignature } from '../server/services/duplicate-detector';
 
@@ -134,6 +135,31 @@ describe('Import Engine — Validation and Normalization', () => {
       const hash2 = generateHmacSignature('12345678900', 'Administracao', 'UniFecaf', '2026-06');
       
       expect(hash1).not.toBe(hash2);
+    });
+  });
+
+  describe('Normalizador de Mês de Referência (normalizeReferenceMonth)', () => {
+    it('deve aceitar e manter o formato YYYY-MM correto', () => {
+      expect(normalizeReferenceMonth('2026-07')).toBe('2026-07');
+      expect(normalizeReferenceMonth('2026-7')).toBe('2026-07');
+    });
+
+    it('deve converter formato MM/YYYY ou MM-YYYY para YYYY-MM', () => {
+      expect(normalizeReferenceMonth('07/2026')).toBe('2026-07');
+      expect(normalizeReferenceMonth('7-2026')).toBe('2026-07');
+    });
+
+    it('deve converter formato MM/YY para YYYY-MM', () => {
+      expect(normalizeReferenceMonth('07/26')).toBe('2026-07');
+    });
+
+    it('deve converter nome do mês em português (com ou sem ano) para YYYY-MM', () => {
+      const currentYear = new Date().getFullYear().toString();
+      expect(normalizeReferenceMonth('Julho')).toBe(`${currentYear}-07`);
+      expect(normalizeReferenceMonth('Julho/2026')).toBe('2026-07');
+      expect(normalizeReferenceMonth('julho de 2026')).toBe('2026-07');
+      expect(normalizeReferenceMonth('jul/26')).toBe('2026-07');
+      expect(normalizeReferenceMonth('Janeiro/2025')).toBe('2025-01');
     });
   });
 });

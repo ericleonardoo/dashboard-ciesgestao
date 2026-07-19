@@ -8,6 +8,85 @@ export function cleanNumericString(value: string): string {
 }
 
 /**
+ * Normaliza qualquer formato de mês (ex: "Julho", "Julho/2026", "07/2026", "2026-07") para "YYYY-MM"
+ */
+export function normalizeReferenceMonth(input: string): string {
+  if (!input) return '';
+  const cleanInput = input.trim().toLowerCase();
+
+  // Caso 1: YYYY-MM (ex: "2026-07" ou "2026-7")
+  const yyyyMmRegex = /^(\d{4})-(\d{1,2})$/;
+  const matchYyyyMm = cleanInput.match(yyyyMmRegex);
+  if (matchYyyyMm) {
+    const year = matchYyyyMm[1];
+    const month = matchYyyyMm[2].padStart(2, '0');
+    return `${year}-${month}`;
+  }
+
+  // Caso 2: MM/YYYY ou MM-YYYY (ex: "07/2026" ou "7/2026")
+  const mmYyyyRegex = /^(\d{1,2})[\/\-](\d{4})$/;
+  const matchMmYyyy = cleanInput.match(mmYyyyRegex);
+  if (matchMmYyyy) {
+    const month = matchMmYyyy[1].padStart(2, '0');
+    const year = matchMmYyyy[2];
+    return `${year}-${month}`;
+  }
+
+  // Caso 3: MM/YY ou MM-YY (ex: "07/26")
+  const mmYyRegex = /^(\d{1,2})[\/\-](\d{2})$/;
+  const matchMmYy = cleanInput.match(mmYyRegex);
+  if (matchMmYy) {
+    const month = matchMmYy[1].padStart(2, '0');
+    const year = `20${matchMmYy[2]}`; // Assume século 21
+    return `${year}-${month}`;
+  }
+
+  // Caso 4: Nomes textuais do mês em português (ex: "Julho", "Julho/2026", "julho/26")
+  const monthMap: Record<string, string> = {
+    janeiro: '01', jan: '01',
+    fevereiro: '02', fev: '02',
+    marco: '03', março: '03', mar: '03',
+    abril: '04', abr: '04',
+    maio: '05', mai: '05',
+    junho: '06', jun: '06',
+    julho: '07', jul: '07',
+    agosto: '08', ago: '08',
+    setembro: '09', set: '09',
+    outubro: '10', out: '10',
+    novembro: '11', nov: '11',
+    dezembro: '12', dez: '12'
+  };
+
+  // Procura se algum nome de mês está contido na string
+  let foundMonthNum = '';
+  for (const [name, num] of Object.entries(monthMap)) {
+    if (cleanInput.includes(name)) {
+      foundMonthNum = num;
+      break;
+    }
+  }
+
+  if (foundMonthNum) {
+    let year = new Date().getFullYear().toString(); // Default para ano atual
+    
+    // Procura por 4 dígitos consecutivos (ex: "2026")
+    const year4Match = cleanInput.match(/\b(20\d{2})\b/);
+    if (year4Match) {
+      year = year4Match[1];
+    } else {
+      // Procura por 2 dígitos depois de barra ou espaço no final (ex: "/26" ou "de 26")
+      const year2Match = cleanInput.match(/[\/\s](\d{2})$/);
+      if (year2Match) {
+        year = `20${year2Match[1]}`;
+      }
+    }
+    return `${year}-${foundMonthNum}`;
+  }
+
+  return input;
+}
+
+/**
  * Normaliza e valida o CPF para exatamente 11 dígitos numéricos
  */
 export const cpfSchema = z

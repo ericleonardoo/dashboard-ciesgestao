@@ -7,6 +7,7 @@ import { getAdminDb } from '../../lib/firebase/admin';
 import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
 import { getSession } from '../../lib/firebase/auth-session';
+import { normalizeReferenceMonth } from '../../lib/validation/enrollment-schema';
 
 export interface ImportPreviewResult {
   success: boolean;
@@ -46,7 +47,8 @@ export async function validateUpload(formData: FormData): Promise<ImportPreviewR
   await requirePermission('imports', 'read');
 
   const file = formData.get('file') as File;
-  const referenceMonth = formData.get('referenceMonth') as string;
+  const rawReferenceMonth = formData.get('referenceMonth') as string;
+  const referenceMonth = normalizeReferenceMonth(rawReferenceMonth);
 
   if (!file || !referenceMonth) {
     throw new Error('Arquivo e mês de referência são obrigatórios.');
@@ -141,10 +143,11 @@ export async function validateUpload(formData: FormData): Promise<ImportPreviewR
  * Server Action para confirmar e persistir transacionalmente o lote de importação no banco
  */
 export async function confirmImport(
-  referenceMonth: string,
+  rawReferenceMonth: string,
   filename: string,
   rows: ImportPreviewResult['rows']
 ) {
+  const referenceMonth = normalizeReferenceMonth(rawReferenceMonth);
   // Exige permissão de escrita de importações
   const user = await requirePermission('imports', 'write');
 

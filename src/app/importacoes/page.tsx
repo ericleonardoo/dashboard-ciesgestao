@@ -7,6 +7,7 @@ import { EnrollmentItem } from '@/server/actions/enrollments';
 import { getCurrentProfile } from '@/server/actions/users';
 import { UserPermissions } from '@/lib/firebase/auth-session';
 import RestrictedAccess from '@/components/shared/RestrictedAccess';
+import { normalizeReferenceMonth } from '@/lib/validation/enrollment-schema';
 import { TableSkeleton } from '@/components/shared/Skeleton';
 import { 
   AlertTriangle, 
@@ -84,7 +85,10 @@ export default function ImportacoesPage() {
 
   const handleAnalyze = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!file || !referenceMonth) {
+    const normalizedMonth = normalizeReferenceMonth(referenceMonth);
+    setReferenceMonth(normalizedMonth);
+
+    if (!file || !normalizedMonth) {
       setError('Por favor, defina o mês de referência e anexe uma planilha.');
       return;
     }
@@ -95,7 +99,7 @@ export default function ImportacoesPage() {
     try {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('referenceMonth', referenceMonth);
+      formData.append('referenceMonth', normalizedMonth);
 
       const result = await validateUpload(formData);
       setPreviewData(result);
