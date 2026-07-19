@@ -11,6 +11,7 @@ import {
   ArrowLeft,
   FileUp
 } from 'lucide-react';
+import MonthPicker from '@/components/shared/MonthPicker';
 
 export default function ImportacoesPage() {
   const [step, setStep] = useState<'upload' | 'preview' | 'success'>('upload');
@@ -160,18 +161,14 @@ export default function ImportacoesPage() {
           <form onSubmit={handleAnalyze} className="space-y-8">
             
             {/* Input de Data de Referência */}
-            <div className="space-y-3 max-w-sm mx-auto">
-              <label htmlFor="referenceMonth" className="block text-xs font-bold uppercase tracking-wider text-muted-foreground text-center">
+            <div className="space-y-3 max-w-[280px] mx-auto relative z-20">
+              <label htmlFor="referenceMonth" className="block text-[11px] font-bold uppercase tracking-wider text-slate-500 text-center">
                 Mês de Referência da Operação
               </label>
-              <input
-                type="month"
-                id="referenceMonth"
-                name="referenceMonth"
-                required
-                value={referenceMonth}
-                onChange={(e) => setReferenceMonth(e.target.value)}
-                className="w-full text-center px-4 py-3 bg-secondary/50 border border-border rounded-xl text-sm font-semibold text-foreground focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+              <MonthPicker 
+                value={referenceMonth} 
+                onChange={setReferenceMonth} 
+                required 
               />
             </div>
 
