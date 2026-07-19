@@ -21,6 +21,7 @@ import {
   History
 } from 'lucide-react';
 import PeriodSelector from '@/components/shared/PeriodSelector';
+import FilterSelect from '@/components/shared/FilterSelect';
 
 export default function MatriculasPage() {
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
@@ -312,49 +313,43 @@ export default function MatriculasPage() {
           </div>
 
           {/* Filtro de Faculdade */}
-          <div className="flex items-center space-x-2 bg-secondary/50 border border-border rounded-lg px-3 py-2">
-            <Building className="h-4.5 w-4.5 text-muted-foreground" />
-            <select
-              value={filterInstitution}
-              onChange={(e) => { setFilterInstitution(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-transparent text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-secondary rounded-sm cursor-pointer transition-all"
-            >
-              <option value="TODOS">Faculdade: Todas</option>
-              <option value="UniFecaf">UniFecaf</option>
-              <option value="UniFacvest">UniFacvest</option>
-              <option value="FSL">FSL</option>
-            </select>
-          </div>
+          <FilterSelect
+            value={filterInstitution}
+            onChange={(val) => { setFilterInstitution(val); setCurrentPage(1); }}
+            icon={<Building className="w-4 h-4" />}
+            options={[
+              { value: 'TODOS', label: 'Faculdade: Todas' },
+              { value: 'UniFecaf', label: 'UniFecaf' },
+              { value: 'UniFacvest', label: 'UniFacvest' },
+              { value: 'FSL', label: 'FSL' }
+            ]}
+          />
 
           {/* Filtro de BVS */}
-          <div className="flex items-center space-x-2 bg-secondary/50 border border-border rounded-lg px-3 py-2">
-            <UserCheck className="h-4.5 w-4.5 text-muted-foreground" />
-            <select
-              value={filterBvs}
-              onChange={(e) => { setFilterBvs(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-transparent text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-secondary rounded-sm cursor-pointer transition-all"
-            >
-              <option value="TODOS">BVS: Todos</option>
-              <option value="SIM">BVS: SIM</option>
-              <option value="NÃO">BVS: NÃO</option>
-              <option value="NÃO INFORMADO">BVS: NÃO INFORMADO</option>
-            </select>
-          </div>
+          <FilterSelect
+            value={filterBvs}
+            onChange={(val) => { setFilterBvs(val); setCurrentPage(1); }}
+            icon={<UserCheck className="w-4 h-4" />}
+            options={[
+              { value: 'TODOS', label: 'BVS: Todos' },
+              { value: 'SIM', label: 'BVS: SIM' },
+              { value: 'NÃO', label: 'BVS: NÃO' },
+              { value: 'NÃO INFORMADO', label: 'BVS: NÃO INFORMADO' }
+            ]}
+          />
 
           {/* Filtro de Subiu */}
-          <div className="flex items-center space-x-2 bg-secondary/50 border border-border rounded-lg px-3 py-2">
-            <Filter className="h-4.5 w-4.5 text-muted-foreground" />
-            <select
-              value={filterRelease}
-              onChange={(e) => { setFilterRelease(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-transparent text-xs text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-secondary rounded-sm cursor-pointer transition-all"
-            >
-              <option value="TODOS">Subiu?: Todos</option>
-              <option value="SIM">Subiu?: SIM</option>
-              <option value="NÃO">Subiu?: NÃO</option>
-              <option value="NÃO INFORMADO">Subiu?: NÃO INFORMADO</option>
-            </select>
-          </div>
+          <FilterSelect
+            value={filterRelease}
+            onChange={(val) => { setFilterRelease(val); setCurrentPage(1); }}
+            icon={<Filter className="w-4 h-4" />}
+            options={[
+              { value: 'TODOS', label: 'Subiu?: Todos' },
+              { value: 'SIM', label: 'Subiu?: SIM' },
+              { value: 'NÃO', label: 'Subiu?: NÃO' },
+              { value: 'NÃO INFORMADO', label: 'Subiu?: NÃO INFORMADO' }
+            ]}
+          />
         </div>
       </div>
 
