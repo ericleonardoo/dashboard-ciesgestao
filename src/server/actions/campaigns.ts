@@ -1,6 +1,6 @@
 'use server';
 
-import { getAdminFirestore } from '@/lib/firebase/admin';
+import { getAdminDb } from '@/lib/firebase/admin';
 import { verifySession } from '@/lib/firebase/auth-session';
 import { campaignSchema, Campaign } from '@/lib/validation/campaign-schema';
 import { z } from 'zod';
@@ -14,7 +14,7 @@ export async function getCampaigns(filters?: { period?: string; channel?: string
       return { success: false, error: 'Não autenticado' };
     }
 
-    const db = getAdminFirestore();
+    const db = getAdminDb();
     let query: FirebaseFirestore.Query = db.collection(COLLECTION_NAME);
 
     if (filters?.channel && filters.channel !== 'TODOS') {
@@ -47,7 +47,7 @@ export async function createCampaign(data: unknown) {
     }
 
     const parsed = campaignSchema.parse(data);
-    const db = getAdminFirestore();
+    const db = getAdminDb();
     
     const now = new Date().toISOString();
     const docRef = db.collection(COLLECTION_NAME).doc();
@@ -79,7 +79,7 @@ export async function updateCampaign(id: string, data: unknown) {
     }
 
     const parsed = campaignSchema.partial().parse(data);
-    const db = getAdminFirestore();
+    const db = getAdminDb();
     const docRef = db.collection(COLLECTION_NAME).doc(id);
 
     const updateData = {
@@ -107,7 +107,7 @@ export async function deleteCampaign(id: string) {
       return { success: false, error: 'Não autenticado' };
     }
 
-    const db = getAdminFirestore();
+    const db = getAdminDb();
     await db.collection(COLLECTION_NAME).doc(id).delete();
     
     return { success: true };
