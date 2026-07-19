@@ -12,6 +12,7 @@ import {
   Smartphone,
   Info
 } from 'lucide-react';
+import PeriodSelector from '@/components/shared/PeriodSelector';
 import { TableSkeleton } from '../../components/shared/Skeleton';
 
 export default function RelacionamentoPage() {
@@ -172,23 +173,11 @@ export default function RelacionamentoPage() {
 
         {/* Filtro de Mês de Referência */}
         {availableMonths.length > 0 && (
-          <div className="flex items-center space-x-3 bg-card border border-border px-4 py-2 rounded-lg shadow-sm">
-            <label htmlFor="ref-month" className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-              Período:
-            </label>
-            <select
-              id="ref-month"
-              value={selectedMonth}
-              onChange={(e) => setSelectedMonth(e.target.value)}
-              className="bg-transparent text-sm font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-1 focus:ring-offset-secondary rounded-sm cursor-pointer border-none p-0 pr-6 transition-all"
-            >
-              {availableMonths.map((m) => (
-                <option key={m} value={m} className="bg-card text-foreground">
-                  {formatMonthName(m)}
-                </option>
-              ))}
-            </select>
-          </div>
+          <PeriodSelector
+            availableMonths={availableMonths}
+            selectedMonth={selectedMonth}
+            onChange={setSelectedMonth}
+          />
         )}
       </div>
 

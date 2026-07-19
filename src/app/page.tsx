@@ -18,6 +18,7 @@ import {
   AlertOctagon,
   ListTodo
 } from 'lucide-react';
+import PeriodSelector from '@/components/shared/PeriodSelector';
 
 import { KpiCardSkeleton } from '../components/shared/Skeleton';
 
@@ -40,7 +41,6 @@ export default function Home() {
   const [availableMonths, setAvailableMonths] = useState<string[]>([]);
   const [selectedMonth, setSelectedMonth] = useState('');
   const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -203,50 +203,11 @@ export default function Home() {
         </div>
         
         {availableMonths.length > 0 && (
-          <div className="relative">
-            <div 
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center space-x-3 bg-card border border-border px-4 py-2 rounded-lg shadow-sm cursor-pointer hover:bg-secondary transition-all"
-            >
-              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                Período:
-              </span>
-              <div className="flex items-center space-x-2">
-                <span className="text-sm font-semibold text-foreground">
-                  {formatMonthName(selectedMonth)}
-                </span>
-                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform duration-300 ${isDropdownOpen ? 'rotate-180' : ''}`} />
-              </div>
-            </div>
-
-            {isDropdownOpen && (
-              <>
-                <div className="fixed inset-0 z-40" onClick={() => setIsDropdownOpen(false)}></div>
-                <div className="absolute right-0 mt-2 w-56 bg-card border border-gray-400 rounded-xl shadow-2xl z-50 p-1.5">
-                  {availableMonths.map((m) => {
-                    const isActive = m === selectedMonth;
-                    return (
-                      <div
-                        key={m}
-                        onClick={() => {
-                          setSelectedMonth(m);
-                          setIsDropdownOpen(false);
-                        }}
-                        className={`px-3 py-2 my-0.5 text-sm cursor-pointer flex items-center justify-between rounded-md transition-all duration-200 border border-transparent ${
-                          isActive 
-                            ? 'bg-secondary text-foreground font-semibold shadow-sm border-border' 
-                            : 'text-muted-foreground hover:text-foreground hover:bg-background hover:border-gray-200 hover:shadow-md hover:-translate-y-0.5'
-                        }`}
-                      >
-                        {formatMonthName(m)}
-                        {isActive && <div className="w-1.5 h-1.5 rounded-full bg-foreground shadow-sm"></div>}
-                      </div>
-                    );
-                  })}
-                </div>
-              </>
-            )}
-          </div>
+          <PeriodSelector
+            availableMonths={availableMonths}
+            selectedMonth={selectedMonth}
+            onChange={setSelectedMonth}
+          />
         )}
       </div>
 
