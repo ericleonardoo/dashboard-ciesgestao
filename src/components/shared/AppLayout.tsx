@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import SidebarNav from "@/components/shared/SidebarNav";
 import UserProfileSidebar from "@/components/shared/UserProfileSidebar";
 
@@ -9,6 +10,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   // Estado que controla se a barra lateral está aberta ou fechada.
   // Começamos com ela aberta.
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const pathname = usePathname();
+
+  // Se estivermos na tela de login, não renderizamos a barra lateral, apenas o conteúdo
+  if (pathname === '/login') {
+    return <div className="h-full min-h-screen bg-background">{children}</div>;
+  }
 
   return (
     <div className="flex h-full min-h-screen relative overflow-hidden bg-background">
