@@ -182,9 +182,9 @@ export default function LeadsPage() {
 
       {/* Modal / Slide-over */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center sm:justify-end">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={() => setIsModalOpen(false)}></div>
-          <div className="relative w-full h-full sm:h-auto sm:max-h-[90vh] sm:w-[500px] bg-background sm:rounded-l-2xl shadow-2xl flex flex-col overflow-hidden animate-in slide-in-from-right duration-300">
+          <div className="relative w-full max-w-[500px] h-auto max-h-[90vh] bg-background rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-border bg-secondary/30">
               <h2 className="text-xl font-bold text-foreground">
                 {editingLead ? 'Editar Lead' : 'Adicionar Novo Lead'}
