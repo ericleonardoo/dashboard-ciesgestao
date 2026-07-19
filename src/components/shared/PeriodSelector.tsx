@@ -37,7 +37,7 @@ export default function PeriodSelector({ availableMonths, selectedMonth, onChang
       {/* Botão Trigger */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center space-x-3 bg-white border border-gray-200 px-4 py-2.5 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
+        className="flex items-center space-x-3 bg-white border border-gray-300 px-4 py-2.5 rounded-lg shadow-sm cursor-pointer hover:bg-gray-50 transition-colors"
       >
         <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
           PERÍODO:
@@ -52,7 +52,7 @@ export default function PeriodSelector({ availableMonths, selectedMonth, onChang
 
       {/* Menu Dropdown */}
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-full min-w-[220px] bg-white border border-gray-200 rounded-xl shadow-lg z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100">
+        <div className="absolute right-0 mt-2 w-full min-w-[220px] bg-white border border-gray-300 rounded-xl shadow-lg z-50 p-1.5 animate-in fade-in zoom-in-95 duration-100">
           {availableMonths.map((m) => {
             const isActive = m === selectedMonth;
             return (
