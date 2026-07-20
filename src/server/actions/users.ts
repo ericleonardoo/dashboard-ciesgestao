@@ -5,6 +5,8 @@ import { requirePermission } from '../../lib/permissions';
 import { getCurrentUserPermissions, UserPermissions } from '../../lib/firebase/auth-session';
 import { FieldValue } from 'firebase-admin/firestore';
 import { revalidatePath } from 'next/cache';
+import fs from 'fs';
+import path from 'path';
 
 export interface CreateColaboradorInput {
   email: string;
@@ -12,11 +14,98 @@ export interface CreateColaboradorInput {
   areas: string[];
 }
 
+interface DemoUser {
+  uid: string;
+  name: string;
+  email: string;
+  status: 'active' | 'inactive';
+  areas: string[];
+  createdAt: string;
+}
+
+const DEMO_USERS_FILE = path.join(process.cwd(), 'src/lib/demo-users-data.json');
+
+const DEFAULT_DEMO_USERS: DemoUser[] = [
+  {
+    uid: 'demo-user-gestao',
+    name: 'Elen Sena',
+    email: 'elen.sena@ciesmg.com.br',
+    status: 'active',
+    areas: ['gestao'],
+    createdAt: new Date().toISOString()
+  },
+  {
+    uid: 'demo-user-relacionamento',
+    name: 'Nayara Silva',
+    email: 'nayara.silva@ciesmg.com.br',
+    status: 'active',
+    areas: ['relacionamento'],
+    createdAt: new Date().toISOString()
+  },
+  {
+    uid: 'demo-user-bia',
+    name: 'Bia Costa',
+    email: 'bia.costa@ciesmg.com.br',
+    status: 'active',
+    areas: ['administrativo', 'marketing', 'comercial'],
+    createdAt: new Date().toISOString()
+  },
+  {
+    uid: 'demo-user-ninha',
+    name: 'Ninha Santos',
+    email: 'ninha.santos@ciesmg.com.br',
+    status: 'active',
+    areas: ['comercial'],
+    createdAt: new Date().toISOString()
+  },
+  {
+    uid: 'demo-user-eric',
+    name: 'Eric Carvalho',
+    email: 'eric.carvalho@ciesmg.com.br',
+    status: 'active',
+    areas: ['relacionamento'],
+    createdAt: new Date().toISOString()
+  }
+];
+
+function getDemoUsersList(): DemoUser[] {
+  try {
+    if (fs.existsSync(DEMO_USERS_FILE)) {
+      const data = fs.readFileSync(DEMO_USERS_FILE, 'utf-8');
+      return JSON.parse(data);
+    }
+  } catch (err) {
+    console.error('Erro ao ler demo-users-data.json:', err);
+  }
+  return DEFAULT_DEMO_USERS;
+}
+
+function saveDemoUsersList(users: DemoUser[]) {
+  try {
+    fs.writeFileSync(DEMO_USERS_FILE, JSON.stringify(users, null, 2), 'utf-8');
+  } catch (err) {
+    console.error('Erro ao salvar demo-users-data.json:', err);
+  }
+}
+
 /**
  * Server Action para carregar a lista de colaboradores do banco (somente administradores)
  */
 export async function getColaboradores() {
   await requirePermission('users', 'read');
+
+  const session = await getCurrentUserPermissions();
+  if (session && session.uid.startsWith('demo-user-')) {
+    const list = getDemoUsersList();
+    return list.map(u => ({
+      uid: u.uid,
+      name: u.name,
+      email: u.email,
+      status: u.status,
+      areas: u.areas,
+      createdAt: u.createdAt,
+    }));
+  }
 
   try {
     const usersSnapshot = await getAdminDb().collection('users').orderBy('name', 'asc').get();
@@ -49,6 +138,33 @@ export async function createColaborador(input: CreateColaboradorInput) {
 
   if (!email || !name || areas.length === 0) {
     throw new Error('Todos os campos obrigatórios devem ser preenchidos.');
+  }
+
+  const session = await getCurrentUserPermissions();
+  if (session && session.uid.startsWith('demo-user-')) {
+    const list = getDemoUsersList();
+    if (list.some(u => u.email.toLowerCase() === email.toLowerCase())) {
+      throw new Error('O e-mail inserido já está cadastrado em outra conta.');
+    }
+
+    const temporaryPassword = Math.random().toString(36).substring(2, 10) + 'A1!';
+    const newUid = `demo-user-colab-${Math.random().toString(36).substring(2, 9)}`;
+    const newColab: DemoUser = {
+      uid: newUid,
+      name,
+      email,
+      status: 'active',
+      areas,
+      createdAt: new Date().toISOString(),
+    };
+    list.push(newColab);
+    saveDemoUsersList(list);
+
+    revalidatePath('/colaboradores');
+    return {
+      uid: newUid,
+      temporaryPassword,
+    };
   }
 
   // Gera uma senha aleatória temporária para a criação do usuário no Firebase Auth
@@ -109,6 +225,16 @@ export async function getColaboradoresDropdown() {
   const user = await getCurrentUserPermissions();
   if (!user || user.status !== 'active') {
     throw new Error('UNAUTHORIZED: Usuário não autenticado ou inativo.');
+  }
+
+  if (user.uid.startsWith('demo-user-')) {
+    const list = getDemoUsersList();
+    return list
+      .filter(u => u.status === 'active')
+      .map(u => ({
+        uid: u.uid,
+        name: u.name,
+      }));
   }
 
   try {
