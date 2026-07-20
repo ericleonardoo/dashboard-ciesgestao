@@ -3,6 +3,7 @@
 import React from 'react';
 import { Lead, LeadStatus } from '@/lib/validation/lead-schema';
 import { Edit2 } from 'lucide-react';
+import LeadStatusSelect from './LeadStatusSelect';
 
 interface LeadTableProps {
   leads: Lead[];
@@ -61,16 +62,11 @@ export default function LeadTable({ leads, onEdit, onStatusChange }: LeadTablePr
                 {lead.origin.replace('_', ' ')}
               </td>
               <td className="px-4 py-3">
-                <select
+                <LeadStatusSelect
                   value={lead.status}
-                  onChange={(e) => onStatusChange(lead.id!, e.target.value as LeadStatus)}
-                  className={`text-xs font-semibold px-2 py-1 rounded-full border focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer ${STATUS_COLORS[lead.status]}`}
-                >
-                  <option value="novo">Novo</option>
-                  <option value="em_atendimento">Em Atendimento</option>
-                  <option value="matriculado">Matriculado</option>
-                  <option value="perdido">Perdido</option>
-                </select>
+                  onChange={(newStatus) => onStatusChange(lead.id!, newStatus)}
+                  statusColors={STATUS_COLORS}
+                />
               </td>
               <td className="px-4 py-3 text-right">
                 <button

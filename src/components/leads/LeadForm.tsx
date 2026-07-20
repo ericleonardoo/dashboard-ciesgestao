@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Lead, leadSchema, LeadStatus, LeadOrigin } from '@/lib/validation/lead-schema';
+import FormSelect from '@/components/shared/FormSelect';
 
 interface LeadFormProps {
   initialData?: Lead;
@@ -117,33 +118,31 @@ export default function LeadForm({ initialData, onSubmit, onCancel, isLoading = 
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">Status do Funil</label>
-            <select
-              name="status"
+            <FormSelect
               value={formData.status}
-              onChange={handleChange}
-              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
-            >
-              <option value="novo">Novo</option>
-              <option value="em_atendimento">Em Atendimento</option>
-              <option value="matriculado">Matriculado (Ganho)</option>
-              <option value="perdido">Perdido</option>
-            </select>
+              onChange={(v) => setFormData(f => ({ ...f, status: v as LeadStatus }))}
+              options={[
+                { value: 'novo', label: 'Novo' },
+                { value: 'em_atendimento', label: 'Em Atendimento' },
+                { value: 'matriculado', label: 'Matriculado (Ganho)' },
+                { value: 'perdido', label: 'Perdido' }
+              ]}
+            />
           </div>
           <div>
             <label className="block text-sm font-medium text-foreground mb-1">Origem do Lead</label>
-            <select
-              name="origin"
+            <FormSelect
               value={formData.origin}
-              onChange={handleChange}
-              className="w-full border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 bg-background"
-            >
-              <option value="organico">Orgânico</option>
-              <option value="meta_ads">Meta Ads</option>
-              <option value="google_ads">Google Ads</option>
-              <option value="convenio">Convênio</option>
-              <option value="indicacao">Indicação</option>
-              <option value="outro">Outro</option>
-            </select>
+              onChange={(v) => setFormData(f => ({ ...f, origin: v as LeadOrigin }))}
+              options={[
+                { value: 'organico', label: 'Orgânico' },
+                { value: 'meta_ads', label: 'Meta Ads' },
+                { value: 'google_ads', label: 'Google Ads' },
+                { value: 'convenio', label: 'Convênio' },
+                { value: 'indicacao', label: 'Indicação' },
+                { value: 'outro', label: 'Outro' }
+              ]}
+            />
           </div>
         </div>
 
