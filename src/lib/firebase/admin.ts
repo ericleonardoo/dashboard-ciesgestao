@@ -19,7 +19,9 @@ function initializeAdmin() {
   // Se o emulador do Firestore estiver rodando, podemos inicializar sem chaves privadas reais
   const isEmulator = !!process.env.FIRESTORE_EMULATOR_HOST || !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
 
-  if (isEmulator) {
+  const isDev = process.env.NODE_ENV !== 'production';
+
+  if (isEmulator || (isDev && (!clientEmail || !privateKey))) {
     return initializeApp({
       projectId: projectId || 'cies-gestao-dev',
     });
