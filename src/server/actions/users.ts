@@ -101,3 +101,29 @@ export async function getCurrentProfile(): Promise<UserPermissions | null> {
     return null;
   }
 }
+
+/**
+ * Server Action para obter lista simplificada de colaboradores ativos (para dropdowns de formulário)
+ */
+export async function getColaboradoresDropdown() {
+  const user = await getCurrentUserPermissions();
+  if (!user || user.status !== 'active') {
+    throw new Error('UNAUTHORIZED: Usuário não autenticado ou inativo.');
+  }
+
+  try {
+    const snapshot = await getAdminDb()
+      .collection('users')
+      .where('status', '==', 'active')
+      .select('name')
+      .get();
+
+    return snapshot.docs.map((doc) => ({
+      uid: doc.id,
+      name: doc.data().name || '',
+    }));
+  } catch (error) {
+    console.error('Erro ao listar colaboradores para dropdown:', error);
+    throw new Error('Falha ao obter lista de responsáveis.');
+  }
+}

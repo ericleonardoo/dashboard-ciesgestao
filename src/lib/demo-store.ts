@@ -3,6 +3,8 @@
 import { EnrollmentItem } from '@/server/actions/enrollments';
 import { BvsQueueItem } from '@/server/actions/relacionamento';
 import { normalizeReferenceMonth } from '@/lib/validation/enrollment-schema';
+import { Partnership } from './validation/partnership-schema';
+
 
 // Interface do lote de importação mock
 export interface DemoImportBatch {
@@ -553,3 +555,62 @@ export function demoDeleteLead(id: string): void {
   leads = leads.filter(l => l.id !== id);
   localStorage.setItem(LEADS_KEY, JSON.stringify(leads));
 }
+
+// ============================================================================
+// MÓDULO: CONVÊNIOS (PARTNERSHIPS)
+// ============================================================================
+
+export function demoGetPartnerships(): Partnership[] {
+  initDemoStore();
+  const raw = localStorage.getItem(PARTNERSHIPS_KEY);
+  if (!raw) return [];
+  return JSON.parse(raw) as Partnership[];
+}
+
+export function demoCreatePartnership(data: Omit<Partnership, 'id' | 'createdAt' | 'updatedAt'>): Partnership {
+  initDemoStore();
+  const raw = localStorage.getItem(PARTNERSHIPS_KEY);
+  const list: Partnership[] = raw ? JSON.parse(raw) : [];
+
+  const newPartnership: Partnership = {
+    ...data,
+    id: `part-demo-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  list.push(newPartnership);
+  localStorage.setItem(PARTNERSHIPS_KEY, JSON.stringify(list));
+  return newPartnership;
+}
+
+export function demoUpdatePartnership(id: string, data: Partial<Partnership>): Partnership {
+  initDemoStore();
+  const raw = localStorage.getItem(PARTNERSHIPS_KEY);
+  if (!raw) throw new Error('Demo Store não inicializada.');
+
+  const list: Partnership[] = JSON.parse(raw);
+  const index = list.findIndex(p => p.id === id);
+  if (index === -1) throw new Error('Parceria não encontrada.');
+
+  const updated: Partnership = {
+    ...list[index],
+    ...data,
+    updatedAt: new Date().toISOString()
+  };
+
+  list[index] = updated;
+  localStorage.setItem(PARTNERSHIPS_KEY, JSON.stringify(list));
+  return updated;
+}
+
+export function demoDeletePartnership(id: string): void {
+  initDemoStore();
+  const raw = localStorage.getItem(PARTNERSHIPS_KEY);
+  if (!raw) return;
+
+  let list: Partnership[] = JSON.parse(raw);
+  list = list.filter(p => p.id !== id);
+  localStorage.setItem(PARTNERSHIPS_KEY, JSON.stringify(list));
+}
+

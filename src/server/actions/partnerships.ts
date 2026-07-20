@@ -67,3 +67,16 @@ export async function updatePartnership(id: string, data: Partial<Partnership>) 
     throw new Error('Falha ao atualizar.');
   }
 }
+
+export async function deletePartnership(id: string) {
+  await requirePermission(COLLECTION, 'write');
+
+  try {
+    await getAdminDb().collection(COLLECTION).doc(id).delete();
+    revalidatePath('/convenios');
+    return { success: true };
+  } catch (error) {
+    console.error('Erro ao excluir convênio:', error);
+    throw new Error('Falha ao excluir convênio.');
+  }
+}
