@@ -14,6 +14,10 @@ export async function getCampaigns(filters?: { period?: string; channel?: string
       return { success: false, error: 'Não autenticado' };
     }
 
+    if (session.uid.startsWith('demo-user-')) {
+      return { success: true, data: [] };
+    }
+
     const db = getAdminDb();
     let query: FirebaseFirestore.Query = db.collection(COLLECTION_NAME);
 
@@ -47,6 +51,11 @@ export async function createCampaign(data: unknown) {
     }
 
     const parsed = campaignSchema.parse(data);
+    
+    if (session.uid.startsWith('demo-user-')) {
+      return { success: true, data: { ...parsed, id: 'demo-' + Date.now() } };
+    }
+
     const db = getAdminDb();
     
     const now = new Date().toISOString();
@@ -79,6 +88,11 @@ export async function updateCampaign(id: string, data: unknown) {
     }
 
     const parsed = campaignSchema.partial().parse(data);
+
+    if (session.uid.startsWith('demo-user-')) {
+      return { success: true };
+    }
+
     const db = getAdminDb();
     const docRef = db.collection(COLLECTION_NAME).doc(id);
 
@@ -105,6 +119,10 @@ export async function deleteCampaign(id: string) {
     // Somente gestores ou pessoas com permissão de exclusão deveriam poder apagar, mas o auth unificado lida com isso se integrado, ou checamos a role.
     if (!session) {
       return { success: false, error: 'Não autenticado' };
+    }
+
+    if (session.uid.startsWith('demo-user-')) {
+      return { success: true };
     }
 
     const db = getAdminDb();
