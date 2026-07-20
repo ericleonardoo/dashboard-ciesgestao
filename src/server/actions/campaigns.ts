@@ -7,6 +7,20 @@ import { z } from 'zod';
 
 const COLLECTION_NAME = 'campaigns';
 
+// Armazenamento em memória apenas para a demonstração (evita erros sem banco configurado)
+let demoCampaigns: Campaign[] = [
+  {
+    id: 'demo-initial-1',
+    name: 'Campanha Instagram Ads',
+    channel: 'Instagram',
+    startDate: '2026-07-01',
+    costCents: 50000, // R$ 500,00
+    leadsCount: 120,
+    enrollmentsCount: 15,
+    status: 'Ativa'
+  }
+];
+
 export async function getCampaigns(filters?: { period?: string; channel?: string }) {
   try {
     const session = await getSession();
@@ -15,7 +29,15 @@ export async function getCampaigns(filters?: { period?: string; channel?: string
     }
 
     if (session.uid.startsWith('demo-user-')) {
-      return { success: true, data: [] };
+      let result = [...demoCampaigns];
+      if (filters?.channel && filters.channel !== 'TODOS') {
+        result = result.filter(c => c.channel === filters.channel);
+      }
+      if (filters?.period) {
+        result = result.filter(c => c.startDate.startsWith(filters.period!));
+      }
+      result.sort((a, b) => b.startDate.localeCompare(a.startDate));
+      return { success: true, data: result };
     }
 
     const db = getAdminDb();
@@ -53,7 +75,13 @@ export async function createCampaign(data: unknown) {
     const parsed = campaignSchema.parse(data);
     
     if (session.uid.startsWith('demo-user-')) {
-      return { success: true, data: { ...parsed, id: 'demo-' + Date.now() } };
+      const newCampaign = { 
+        ...parsed, 
+        id: 'demo-' + Date.now(), 
+        createdAt: new Date().toISOString() 
+      } as Campaign;
+      demoCampaigns.push(newCampaign);
+      return { success: true, data: newCampaign };
     }
 
     const db = getAdminDb();
@@ -90,6 +118,10 @@ export async function updateCampaign(id: string, data: unknown) {
     const parsed = campaignSchema.partial().parse(data);
 
     if (session.uid.startsWith('demo-user-')) {
+      const index = demoCampaigns.findIndex(c => c.id === id);
+      if (index > -1) {
+        demoCampaigns[index] = { ...demoCampaigns[index], ...parsed } as Campaign;
+      }
       return { success: true };
     }
 
@@ -122,6 +154,7 @@ export async function deleteCampaign(id: string) {
     }
 
     if (session.uid.startsWith('demo-user-')) {
+      demoCampaigns = demoCampaigns.filter(c => c.id !== id);
       return { success: true };
     }
 
