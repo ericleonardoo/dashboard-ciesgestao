@@ -38,13 +38,15 @@ const NAV_ITEMS: NavItem[] = [
 export default function SidebarNav({ isCollapsed = false }: { isCollapsed?: boolean }) {
   const pathname = usePathname();
 
+  // Encontra o item mais específico que bate com a rota atual para evitar dois botões ativos
+  const activeHref = NAV_ITEMS.filter(item => 
+    item.href === '/' ? pathname === '/' : (pathname === item.href || pathname.startsWith(`${item.href}/`))
+  ).sort((a, b) => b.href.length - a.href.length)[0]?.href;
+
   return (
     <nav className={`mt-8 flex-1 space-y-1.5 ${isCollapsed ? 'flex flex-col items-center px-0' : 'px-2'}`}>
       {NAV_ITEMS.map((item) => {
-        const isActive =
-          item.href === '/'
-            ? pathname === '/'
-            : pathname.startsWith(item.href);
+        const isActive = item.href === activeHref;
 
         return (
           <Link
