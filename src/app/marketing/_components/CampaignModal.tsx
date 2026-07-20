@@ -5,6 +5,7 @@ import { X } from 'lucide-react';
 import { Campaign, CampaignChannel, CampaignStatus } from '@/lib/validation/campaign-schema';
 import { createCampaign, updateCampaign } from '@/server/actions/campaigns';
 import FormSelect from '@/components/shared/FormSelect';
+import FormDatePicker from '@/components/shared/FormDatePicker';
 
 interface CampaignModalProps {
   isOpen: boolean;
@@ -172,23 +173,19 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
               {/* Data Início */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Data de Início</label>
-                <input 
-                  required
-                  type="date" 
+                <FormDatePicker
                   value={formData.startDate}
-                  onChange={e => setFormData(f => ({ ...f, startDate: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  onChange={(val) => setFormData(f => ({ ...f, startDate: val }))}
+                  required
                 />
               </div>
 
               {/* Data Fim */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Data de Fim <span className="text-slate-400 font-normal lowercase">(opcional)</span></label>
-                <input 
-                  type="date" 
+                <FormDatePicker
                   value={formData.endDate}
-                  onChange={e => setFormData(f => ({ ...f, endDate: e.target.value }))}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  onChange={(val) => setFormData(f => ({ ...f, endDate: val }))}
                 />
               </div>
 
