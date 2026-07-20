@@ -33,7 +33,7 @@ export default function LeadKanban({ leads, onEdit, onStatusChange }: LeadKanban
   return (
     <div className="flex gap-4 overflow-x-auto pb-4 min-h-[60vh]">
       {COLUMNS.map((column) => (
-        <div key={column.id} className={`flex-1 min-w-[300px] border rounded-xl flex flex-col ${column.color}`}>
+        <div key={column.id} className={`flex-1 min-w-[250px] shrink-0 border rounded-xl flex flex-col ${column.color}`}>
           {/* Header da Coluna */}
           <div className="p-3 border-b border-black/5 flex items-center justify-between bg-white/50 rounded-t-xl">
             <h3 className="font-semibold text-sm text-foreground">{column.title}</h3>
@@ -117,6 +117,7 @@ export default function LeadKanban({ leads, onEdit, onStatusChange }: LeadKanban
           </div>
         </div>
       ))}
+      <div className="w-1 shrink-0" aria-hidden="true" />
     </div>
   );
 }
