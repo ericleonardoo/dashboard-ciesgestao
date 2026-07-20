@@ -5,6 +5,7 @@ import { Megaphone, Plus, TrendingUp, Users, Target, Banknote, Edit3, Trash2 } f
 import FilterSelect from '@/components/shared/FilterSelect';
 import PeriodSelector from '@/components/shared/PeriodSelector';
 import CampaignModal from './_components/CampaignModal';
+import ConfirmModal from '@/components/shared/ConfirmModal';
 import { getCampaigns, deleteCampaign } from '@/server/actions/campaigns';
 import { Campaign, CampaignChannel } from '@/lib/validation/campaign-schema';
 
@@ -16,6 +17,7 @@ export default function MarketingPage() {
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
+  const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
 
   const fetchCampaigns = async () => {
     setLoading(true);
@@ -53,9 +55,14 @@ export default function MarketingPage() {
     setIsModalOpen(true);
   };
 
-  const handleDelete = async (id: string) => {
-    if (confirm('Tem certeza que deseja excluir esta campanha?')) {
-      await deleteCampaign(id);
+  const handleDeleteClick = (id: string) => {
+    setCampaignToDelete(id);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (campaignToDelete) {
+      await deleteCampaign(campaignToDelete);
+      setCampaignToDelete(null);
       fetchCampaigns();
     }
   };
@@ -227,7 +234,11 @@ export default function MarketingPage() {
                         <button onClick={() => handleEdit(c)} className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors">
                           <Edit3 className="w-4 h-4" />
                         </button>
-                        <button onClick={() => c.id && handleDelete(c.id)} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                        <button 
+                          onClick={() => c.id && handleDeleteClick(c.id)}
+                          className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Excluir"
+                        >
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
@@ -244,7 +255,15 @@ export default function MarketingPage() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         campaign={editingCampaign}
-        onSuccess={fetchCampaigns}
+        onSuccess={fetchCampaigns} 
+      />
+
+      <ConfirmModal
+        isOpen={!!campaignToDelete}
+        onClose={() => setCampaignToDelete(null)}
+        onConfirm={handleConfirmDelete}
+        title="Excluir Campanha"
+        description="Tem certeza que deseja excluir esta campanha? Todos os dados serão perdidos e não poderão ser recuperados."
       />
     </div>
   );
