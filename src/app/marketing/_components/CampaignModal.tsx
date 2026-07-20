@@ -82,11 +82,11 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
     setLoading(true);
     setError('');
 
-    // Prepara o DTO (Convertendo o display do dinheiro para numero/string limpo que o Zod trata)
-    const costRaw = formData.costDisplay.replace(/\D/g, '');
+    // Prepara o DTO — envia a string formatada (ex: "R$ 250,00") para o Zod parseCurrencyToCents
+    // converter uma única vez para centavos. NÃO converter manualmente aqui.
     const dto = {
       ...formData,
-      costCents: costRaw ? parseInt(costRaw) : 0, // se tiver algo, passa o valor em centavos
+      costCents: formData.costDisplay || '0',
       leadsCount: parseInt(formData.leadsCount) || 0,
       enrollmentsCount: parseInt(formData.enrollmentsCount) || 0,
     };
