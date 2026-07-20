@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Campaign, CampaignChannel, CampaignStatus } from '@/lib/validation/campaign-schema';
 import { createCampaign, updateCampaign } from '@/server/actions/campaigns';
+import FormSelect from '@/components/shared/FormSelect';
 
 interface CampaignModalProps {
   isOpen: boolean;
@@ -151,25 +152,21 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
               {/* Canal */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Canal</label>
-                <select
+                <FormSelect
                   value={formData.channel}
-                  onChange={e => setFormData(f => ({ ...f, channel: e.target.value as CampaignChannel }))}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                >
-                  {CHANNELS.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
+                  onChange={(val) => setFormData(f => ({ ...f, channel: val as CampaignChannel }))}
+                  options={CHANNELS}
+                />
               </div>
 
               {/* Status */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">Status</label>
-                <select
+                <FormSelect
                   value={formData.status}
-                  onChange={e => setFormData(f => ({ ...f, status: e.target.value as CampaignStatus }))}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
-                >
-                  {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                </select>
+                  onChange={(val) => setFormData(f => ({ ...f, status: val as CampaignStatus }))}
+                  options={STATUSES}
+                />
               </div>
 
               {/* Data Início */}
