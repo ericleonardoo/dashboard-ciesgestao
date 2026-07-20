@@ -102,7 +102,7 @@ export async function createCampaign(data: unknown) {
   } catch (error: any) {
     console.error('Erro ao criar campanha:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: error.message || 'Erro interno.' };
   }
@@ -139,7 +139,7 @@ export async function updateCampaign(id: string, data: unknown) {
   } catch (error: any) {
     console.error('Erro ao atualizar campanha:', error);
     if (error instanceof z.ZodError) {
-      return { success: false, error: error.errors[0].message };
+      return { success: false, error: error.issues[0].message };
     }
     return { success: false, error: error.message || 'Erro interno.' };
   }
