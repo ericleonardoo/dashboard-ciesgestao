@@ -4,6 +4,8 @@ import { EnrollmentItem } from '@/server/actions/enrollments';
 import { BvsQueueItem } from '@/server/actions/relacionamento';
 import { normalizeReferenceMonth } from '@/lib/validation/enrollment-schema';
 import { Partnership } from './validation/partnership-schema';
+import { ActionPlan } from './validation/action-plan-schema';
+
 
 
 // Interface do lote de importação mock
@@ -613,4 +615,63 @@ export function demoDeletePartnership(id: string): void {
   list = list.filter(p => p.id !== id);
   localStorage.setItem(PARTNERSHIPS_KEY, JSON.stringify(list));
 }
+
+// ============================================================================
+// MÓDULO: PLANOS DE AÇÃO (ACTION PLANS 5W2H)
+// ============================================================================
+
+export function demoGetActionPlans(): ActionPlan[] {
+  initDemoStore();
+  const raw = localStorage.getItem(ACTION_PLANS_KEY);
+  if (!raw) return [];
+  return JSON.parse(raw) as ActionPlan[];
+}
+
+export function demoCreateActionPlan(data: Omit<ActionPlan, 'id' | 'createdAt' | 'updatedAt'>): ActionPlan {
+  initDemoStore();
+  const raw = localStorage.getItem(ACTION_PLANS_KEY);
+  const list: ActionPlan[] = raw ? JSON.parse(raw) : [];
+
+  const newPlan: ActionPlan = {
+    ...data,
+    id: `plan-demo-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+
+  list.push(newPlan);
+  localStorage.setItem(ACTION_PLANS_KEY, JSON.stringify(list));
+  return newPlan;
+}
+
+export function demoUpdateActionPlan(id: string, data: Partial<ActionPlan>): ActionPlan {
+  initDemoStore();
+  const raw = localStorage.getItem(ACTION_PLANS_KEY);
+  if (!raw) throw new Error('Demo Store não inicializada.');
+
+  const list: ActionPlan[] = JSON.parse(raw);
+  const index = list.findIndex(p => p.id === id);
+  if (index === -1) throw new Error('Plano de ação não encontrado.');
+
+  const updated: ActionPlan = {
+    ...list[index],
+    ...data,
+    updatedAt: new Date().toISOString()
+  };
+
+  list[index] = updated;
+  localStorage.setItem(ACTION_PLANS_KEY, JSON.stringify(list));
+  return updated;
+}
+
+export function demoDeleteActionPlan(id: string): void {
+  initDemoStore();
+  const raw = localStorage.getItem(ACTION_PLANS_KEY);
+  if (!raw) return;
+
+  let list: ActionPlan[] = JSON.parse(raw);
+  list = list.filter(p => p.id !== id);
+  localStorage.setItem(ACTION_PLANS_KEY, JSON.stringify(list));
+}
+
 

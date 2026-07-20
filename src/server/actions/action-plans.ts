@@ -66,3 +66,33 @@ export async function updateActionPlanStatus(id: string, status: ActionPlanStatu
     throw new Error('Falha ao atualizar plano.');
   }
 }
+
+export async function updateActionPlan(id: string, data: Partial<ActionPlan>) {
+  await requirePermission(COLLECTION, 'write');
+
+  try {
+    const updateData = { ...data, updatedAt: FieldValue.serverTimestamp() };
+    delete updateData.id;
+
+    await getAdminDb().collection(COLLECTION).doc(id).update(updateData);
+
+    revalidatePath('/planos-acao');
+    return { success: true };
+  } catch (error) {
+    console.error('Erro ao atualizar plano de ação:', error);
+    throw new Error('Falha ao atualizar plano de ação.');
+  }
+}
+
+export async function deleteActionPlan(id: string) {
+  await requirePermission(COLLECTION, 'write');
+
+  try {
+    await getAdminDb().collection(COLLECTION).doc(id).delete();
+    revalidatePath('/planos-acao');
+    return { success: true };
+  } catch (error) {
+    console.error('Erro ao excluir plano de ação:', error);
+    throw new Error('Falha ao excluir plano de ação.');
+  }
+}
