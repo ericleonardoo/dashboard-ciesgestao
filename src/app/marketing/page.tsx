@@ -61,7 +61,7 @@ export default function MarketingPage() {
   };
 
   return (
-    <div className="flex-1 p-6 md:p-8 lg:p-10 lg:ml-64 animate-fade-in w-full min-h-screen bg-slate-50">
+    <div className="space-y-8 animate-fade-in pb-12">
       
       {/* Header & Filtros */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
