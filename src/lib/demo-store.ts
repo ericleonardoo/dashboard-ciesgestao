@@ -2,6 +2,7 @@
 
 import { EnrollmentItem } from '@/server/actions/enrollments';
 import { BvsQueueItem } from '@/server/actions/relacionamento';
+import { normalizeReferenceMonth } from '@/lib/validation/enrollment-schema';
 
 // Interface do lote de importação mock
 export interface DemoImportBatch {
@@ -178,12 +179,59 @@ export function initDemoStore() {
 }
 
 /**
- * Obter meses disponíveis
+ * Sanitiza os meses disponíveis, normalizando formatos corrompidos para YYYY-MM
+ * e removendo duplicatas que possam ter surgido de importações anteriores.
+ */
+function sanitizeDemoMonths(): string[] {
+  const raw = localStorage.getItem(MONTHS_KEY);
+  if (!raw) return [...INITIAL_MONTHS];
+  
+  const parsed: string[] = JSON.parse(raw);
+  const normalizedSet = new Set<string>();
+  
+  parsed.forEach((m) => {
+    const normalized = normalizeReferenceMonth(m);
+    // Só adiciona se for um formato YYYY-MM válido após normalização
+    if (/^\d{4}-\d{2}$/.test(normalized)) {
+      normalizedSet.add(normalized);
+    }
+  });
+  
+  const cleanMonths = Array.from(normalizedSet).sort((a, b) => b.localeCompare(a));
+  localStorage.setItem(MONTHS_KEY, JSON.stringify(cleanMonths));
+  return cleanMonths;
+}
+
+/**
+ * Sanitiza as matrículas, normalizando referenceMonth corrompido
+ */
+function sanitizeDemoEnrollments(): void {
+  const raw = localStorage.getItem(ENROLLMENTS_KEY);
+  if (!raw) return;
+  
+  const list: EnrollmentItem[] = JSON.parse(raw);
+  let changed = false;
+  
+  list.forEach((e) => {
+    const normalized = normalizeReferenceMonth(e.referenceMonth);
+    if (normalized !== e.referenceMonth && /^\d{4}-\d{2}$/.test(normalized)) {
+      e.referenceMonth = normalized;
+      changed = true;
+    }
+  });
+  
+  if (changed) {
+    localStorage.setItem(ENROLLMENTS_KEY, JSON.stringify(list));
+  }
+}
+
+/**
+ * Obter meses disponíveis (com sanitização automática)
  */
 export function demoGetAvailableMonths(): string[] {
   initDemoStore();
-  const raw = localStorage.getItem(MONTHS_KEY);
-  return raw ? JSON.parse(raw) : INITIAL_MONTHS;
+  sanitizeDemoEnrollments();
+  return sanitizeDemoMonths();
 }
 
 /**
@@ -191,11 +239,12 @@ export function demoGetAvailableMonths(): string[] {
  */
 export function demoGetEnrollmentsList(month: string): EnrollmentItem[] {
   initDemoStore();
+  const normalizedMonth = normalizeReferenceMonth(month);
   const raw = localStorage.getItem(ENROLLMENTS_KEY);
   if (!raw) return [];
   const list: EnrollmentItem[] = JSON.parse(raw);
   return list
-    .filter((e) => e.referenceMonth === month)
+    .filter((e) => normalizeReferenceMonth(e.referenceMonth) === normalizedMonth)
     .sort((a, b) => new Date(b.createdAt || '').getTime() - new Date(a.createdAt || '').getTime());
 }
 
@@ -297,6 +346,13 @@ export function demoConfirmImport(month: string, rows: Omit<EnrollmentItem, 'id'
   insertedCount: number;
 } {
   initDemoStore();
+  
+  // CRITICAL: Normaliza o mês para YYYY-MM antes de qualquer operação
+  const normalizedMonth = normalizeReferenceMonth(month);
+  if (!normalizedMonth || !/^\d{4}-\d{2}$/.test(normalizedMonth)) {
+    throw new Error(`Mês de referência inválido: "${month}". Formato esperado: YYYY-MM.`);
+  }
+  
   const rawEnrollments = localStorage.getItem(ENROLLMENTS_KEY);
   const enrollments: EnrollmentItem[] = rawEnrollments ? JSON.parse(rawEnrollments) : [];
   
@@ -311,7 +367,7 @@ export function demoConfirmImport(month: string, rows: Omit<EnrollmentItem, 'id'
     // Evita duplicidades locais exatas no lote
     const isDuplicate = enrollments.some(
       (e) =>
-        e.referenceMonth === month &&
+        normalizeReferenceMonth(e.referenceMonth) === normalizedMonth &&
         e.cpf === row.cpf &&
         e.courseName.toLowerCase() === row.courseName.toLowerCase() &&
         e.institution.toLowerCase() === row.institution.toLowerCase()
@@ -320,7 +376,7 @@ export function demoConfirmImport(month: string, rows: Omit<EnrollmentItem, 'id'
     const newEnrollment: EnrollmentItem = {
       ...row,
       id: `demo-enroll-${importId}-${i}`,
-      referenceMonth: month,
+      referenceMonth: normalizedMonth,
       bvsStatus: row.bvsStatus || 'NÃO INFORMADO',
       releaseStatus: row.releaseStatus || 'NÃO INFORMADO',
       isDbDuplicate: isDuplicate,
@@ -333,12 +389,13 @@ export function demoConfirmImport(month: string, rows: Omit<EnrollmentItem, 'id'
     inserted++;
   });
 
-  // Atualiza meses disponíveis se for novo
-  if (!months.includes(month)) {
-    months.push(month);
-    months.sort((a, b) => b.localeCompare(a));
-    localStorage.setItem(MONTHS_KEY, JSON.stringify(months));
+  // Atualiza meses disponíveis se o mês normalizado for novo
+  const normalizedMonths = months.map(m => normalizeReferenceMonth(m)).filter(m => /^\d{4}-\d{2}$/.test(m));
+  if (!normalizedMonths.includes(normalizedMonth)) {
+    normalizedMonths.push(normalizedMonth);
   }
+  normalizedMonths.sort((a, b) => b.localeCompare(a));
+  localStorage.setItem(MONTHS_KEY, JSON.stringify(normalizedMonths));
 
   localStorage.setItem(ENROLLMENTS_KEY, JSON.stringify(enrollments));
 
@@ -347,8 +404,8 @@ export function demoConfirmImport(month: string, rows: Omit<EnrollmentItem, 'id'
   const batches: DemoImportBatch[] = rawBatches ? JSON.parse(rawBatches) : [];
   batches.push({
     id: importId,
-    referenceMonth: month,
-    filename: 'planinha_demonstracao.xlsx',
+    referenceMonth: normalizedMonth,
+    filename: 'planilha_demonstracao.xlsx',
     insertedCount: inserted,
     createdAt: new Date().toISOString(),
     createdBy: 'Demonstração Local'

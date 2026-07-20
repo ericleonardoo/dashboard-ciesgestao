@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
+import { normalizeReferenceMonth } from '../../lib/validation/enrollment-schema';
 
 interface PeriodSelectorProps {
   availableMonths: string[];
@@ -9,10 +10,18 @@ interface PeriodSelectorProps {
 
 export function formatMonthName(monthStr: string) {
   if (!monthStr) return '';
-  const [year, month] = monthStr.split('-');
-  const date = new Date(parseInt(year), parseInt(month) - 1);
+  // Normaliza para YYYY-MM antes de tentar formatar
+  const normalized = normalizeReferenceMonth(monthStr);
+  const parts = normalized.split('-');
+  const yearNum = parseInt(parts[0]);
+  const monthNum = parseInt(parts[1]);
+  // Se após normalizar ainda não temos números válidos, retorna o texto original
+  if (isNaN(yearNum) || isNaN(monthNum) || monthNum < 1 || monthNum > 12) {
+    return monthStr;
+  }
+  const date = new Date(yearNum, monthNum - 1);
   const monthName = date.toLocaleDateString('pt-BR', { month: 'long' });
-  return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} / ${year}`;
+  return `${monthName.charAt(0).toUpperCase() + monthName.slice(1)} / ${yearNum}`;
 }
 
 export default function PeriodSelector({ availableMonths, selectedMonth, onChange }: PeriodSelectorProps) {

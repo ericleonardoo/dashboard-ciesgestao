@@ -162,4 +162,34 @@ describe('Import Engine — Validation and Normalization', () => {
       expect(normalizeReferenceMonth('Janeiro/2025')).toBe('2025-01');
     });
   });
+
+  describe('formatMonthName (PeriodSelector) — resistência a dados corrompidos', () => {
+    // Importa diretamente a função para testar
+    it('deve formatar YYYY-MM correto como "Mês / Ano"', async () => {
+      const { formatMonthName } = await import('../components/shared/PeriodSelector');
+      const result = formatMonthName('2026-07');
+      expect(result).toContain('2026');
+      expect(result.toLowerCase()).toContain('julho');
+    });
+
+    it('deve lidar com string "Julho" sem crash (normaliza via normalizeReferenceMonth)', async () => {
+      const { formatMonthName } = await import('../components/shared/PeriodSelector');
+      const result = formatMonthName('Julho');
+      // Deve normalizar e formatar corretamente em vez de retornar "Invalid Date"
+      expect(result).not.toContain('Invalid');
+      expect(result.toLowerCase()).toContain('julho');
+    });
+
+    it('deve retornar string vazia para entrada vazia', async () => {
+      const { formatMonthName } = await import('../components/shared/PeriodSelector');
+      expect(formatMonthName('')).toBe('');
+    });
+
+    it('deve retornar o texto original para entrada completamente inválida', async () => {
+      const { formatMonthName } = await import('../components/shared/PeriodSelector');
+      const result = formatMonthName('abc-xyz');
+      // Deve retornar o original sem crash
+      expect(result).toBe('abc-xyz');
+    });
+  });
 });

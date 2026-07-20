@@ -121,7 +121,12 @@ export default function ImportacoesPage() {
       const isDemo = typeof window !== 'undefined' && localStorage.getItem('cies_demo_mode') === 'true';
       if (isDemo) {
         const { demoConfirmImport } = await import('@/lib/demo-store');
-        const summary = demoConfirmImport(previewData.referenceMonth, previewData.rows as unknown as Omit<EnrollmentItem, 'id' | 'createdAt' | 'auditLogs'>[]);
+        // Normaliza o mês defensivamente — usa o previewData.referenceMonth com fallback para o estado local
+        const monthToUse = normalizeReferenceMonth(previewData.referenceMonth || referenceMonth);
+        if (!monthToUse || !/^\d{4}-\d{2}$/.test(monthToUse)) {
+          throw new Error('Mês de referência inválido. Reinicie a importação e selecione o mês novamente.');
+        }
+        const summary = demoConfirmImport(monthToUse, previewData.rows as unknown as Omit<EnrollmentItem, 'id' | 'createdAt' | 'auditLogs'>[]);
         setSuccessSummary({
           importId: summary.importId,
           insertedCount: summary.insertedCount,
