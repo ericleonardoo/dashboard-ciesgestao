@@ -40,8 +40,8 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
     startDate: '',
     endDate: '',
     costDisplay: '', // para a mascara visual
-    leadsCount: '0',
-    enrollmentsCount: '0',
+    leadsCount: '',
+    enrollmentsCount: '',
     status: 'Ativa' as CampaignStatus,
     institution: ''
   });
@@ -54,8 +54,8 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
         startDate: campaign.startDate,
         endDate: campaign.endDate || '',
         costDisplay: formatCurrency((campaign.costCents || 0).toString()),
-        leadsCount: (campaign.leadsCount || 0).toString(),
-        enrollmentsCount: (campaign.enrollmentsCount || 0).toString(),
+        leadsCount: campaign.leadsCount ? campaign.leadsCount.toString() : '',
+        enrollmentsCount: campaign.enrollmentsCount ? campaign.enrollmentsCount.toString() : '',
         status: campaign.status,
         institution: campaign.institution || ''
       });
@@ -66,8 +66,8 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
         startDate: new Date().toISOString().split('T')[0],
         endDate: '',
         costDisplay: '',
-        leadsCount: '0',
-        enrollmentsCount: '0',
+        leadsCount: '',
+        enrollmentsCount: '',
         status: 'Ativa',
         institution: ''
       });
@@ -87,8 +87,8 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
     const dto = {
       ...formData,
       costCents: costRaw ? parseInt(costRaw) : 0, // se tiver algo, passa o valor em centavos
-      leadsCount: parseInt(formData.leadsCount),
-      enrollmentsCount: parseInt(formData.enrollmentsCount),
+      leadsCount: parseInt(formData.leadsCount) || 0,
+      enrollmentsCount: parseInt(formData.enrollmentsCount) || 0,
     };
 
     try {
@@ -222,6 +222,7 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
                   value={formData.leadsCount}
                   onChange={e => setFormData(f => ({ ...f, leadsCount: e.target.value }))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  placeholder="0"
                 />
               </div>
 
@@ -234,6 +235,7 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
                   value={formData.enrollmentsCount}
                   onChange={e => setFormData(f => ({ ...f, enrollmentsCount: e.target.value }))}
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm text-slate-900 focus:bg-white focus:ring-2 focus:ring-primary focus:border-transparent transition-all outline-none"
+                  placeholder="0"
                 />
               </div>
 
