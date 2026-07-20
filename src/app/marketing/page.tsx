@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Megaphone, Plus, TrendingUp, Users, Target, Banknote, Edit3, Trash2 } from 'lucide-react';
+import { Megaphone, Plus, TrendingUp, Users, Target, Banknote, Edit3, Trash2, CheckCircle2 } from 'lucide-react';
 import FilterSelect from '@/components/shared/FilterSelect';
 import PeriodSelector from '@/components/shared/PeriodSelector';
 import CampaignModal from './_components/CampaignModal';
@@ -14,6 +14,8 @@ export default function MarketingPage() {
   const [loading, setLoading] = useState(true);
   const [filterPeriod, setFilterPeriod] = useState<string>(''); // Vazio = Todos os períodos
   const [filterChannel, setFilterChannel] = useState<string>('TODOS');
+  
+  const [toastMessage, setToastMessage] = useState<string>('');
   
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
@@ -64,6 +66,9 @@ export default function MarketingPage() {
       await deleteCampaign(campaignToDelete);
       setCampaignToDelete(null);
       fetchCampaigns();
+      
+      setToastMessage('Campanha apagada com sucesso!');
+      setTimeout(() => setToastMessage(''), 3000);
     }
   };
 
@@ -265,6 +270,16 @@ export default function MarketingPage() {
         title="Excluir Campanha"
         description="Tem certeza que deseja excluir esta campanha? Todos os dados serão perdidos e não poderão ser recuperados."
       />
+
+      {/* Toast de Sucesso */}
+      {toastMessage && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 fade-in duration-300">
+          <div className="bg-emerald-500 text-white px-4 py-3 rounded-xl shadow-lg font-medium flex items-center gap-3">
+            <CheckCircle2 className="w-5 h-5" />
+            {toastMessage}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
