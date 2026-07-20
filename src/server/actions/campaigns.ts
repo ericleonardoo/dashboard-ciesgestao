@@ -1,7 +1,7 @@
 'use server';
 
 import { getAdminDb } from '@/lib/firebase/admin';
-import { verifySession } from '@/lib/firebase/auth-session';
+import { getSession } from '@/lib/firebase/auth-session';
 import { campaignSchema, Campaign } from '@/lib/validation/campaign-schema';
 import { z } from 'zod';
 
@@ -9,7 +9,7 @@ const COLLECTION_NAME = 'campaigns';
 
 export async function getCampaigns(filters?: { period?: string; channel?: string }) {
   try {
-    const session = await verifySession();
+    const session = await getSession();
     if (!session) {
       return { success: false, error: 'Não autenticado' };
     }
@@ -41,7 +41,7 @@ export async function getCampaigns(filters?: { period?: string; channel?: string
 
 export async function createCampaign(data: unknown) {
   try {
-    const session = await verifySession();
+    const session = await getSession();
     if (!session) {
       return { success: false, error: 'Não autenticado' };
     }
@@ -73,7 +73,7 @@ export async function createCampaign(data: unknown) {
 
 export async function updateCampaign(id: string, data: unknown) {
   try {
-    const session = await verifySession();
+    const session = await getSession();
     if (!session) {
       return { success: false, error: 'Não autenticado' };
     }
@@ -101,7 +101,7 @@ export async function updateCampaign(id: string, data: unknown) {
 
 export async function deleteCampaign(id: string) {
   try {
-    const session = await verifySession();
+    const session = await getSession();
     // Somente gestores ou pessoas com permissão de exclusão deveriam poder apagar, mas o auth unificado lida com isso se integrado, ou checamos a role.
     if (!session) {
       return { success: false, error: 'Não autenticado' };
