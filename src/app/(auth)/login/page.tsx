@@ -53,8 +53,19 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Falha ao validar autorização no servidor.');
+        let serverErrorMsg = 'Falha ao validar autorização no servidor.';
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            serverErrorMsg = data.error || serverErrorMsg;
+          } else {
+            serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          }
+        } catch {
+          serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+        }
+        throw new Error(serverErrorMsg);
       }
 
       router.push('/');
@@ -91,8 +102,19 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Erro ao registrar sessão no servidor.');
+        let serverErrorMsg = 'Erro ao registrar sessão no servidor.';
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            serverErrorMsg = data.error || serverErrorMsg;
+          } else {
+            serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          }
+        } catch {
+          serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+        }
+        throw new Error(serverErrorMsg);
       }
 
       router.push('/');
@@ -159,8 +181,19 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Erro ao inicializar sessão para a nova conta.');
+        let serverErrorMsg = 'Erro ao inicializar sessão para a nova conta.';
+        try {
+          const contentType = response.headers.get('content-type');
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            serverErrorMsg = data.error || serverErrorMsg;
+          } else {
+            serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          }
+        } catch {
+          serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+        }
+        throw new Error(serverErrorMsg);
       }
 
       setSuccessMsg('Conta criada com sucesso! Redirecionando...');

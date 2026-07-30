@@ -8,8 +8,17 @@ export const dynamic = 'force-dynamic';
  */
 export async function POST(request: NextRequest) {
   try {
-    const { idToken } = await request.json();
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        { error: 'Corpo da requisição inválido.' },
+        { status: 400 }
+      );
+    }
 
+    const idToken = body?.idToken;
     if (!idToken) {
       return NextResponse.json(
         { error: 'ID Token obrigatório não fornecido.' },
@@ -32,7 +41,7 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       { error: 'Falha ao autenticar no servidor. Detalhes: ' + message },
-      { status: 401 }
+      { status: 500 }
     );
   }
 }
