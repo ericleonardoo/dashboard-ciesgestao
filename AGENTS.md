@@ -1,508 +1,575 @@
-# AGENTS.md — CIES Gestão (Firebase Edition)
+# AGENTS.md — CIES Gestão
 
-> Documento operacional obrigatório para qualquer agente de IA ou pessoa que trabalhe neste repositório.
-> Este arquivo define **como trabalhar**. O arquivo `CONTEXT.md` define **o que está sendo construído e por quê**.
+> Contrato operacional obrigatório para qualquer agente de IA, desenvolvedor ou colaborador que trabalhe neste repositório.
+>
+> Este arquivo define **como o trabalho deve ser realizado**.  
+> `CONTEXT.md` define **o produto, o negócio e as regras confirmadas**.  
+> `HYPER_PROMPT.md` define **a sequência executável para construir o sistema**.
 
-## 1. Regra de inicialização obrigatória
+## 1. Inicialização obrigatória
 
-Antes de planejar, editar código, executar comandos ou sugerir arquitetura:
+Antes de planejar, editar código, instalar dependências ou executar comandos:
 
-1. Leia este `AGENTS.md` por completo.
-2. Leia `CONTEXT.md` por completo.
-3. Se existir, leia `HYPER_PROMPT.md` por completo.
-4. Leia os documentos relacionados à tarefa em `docs/`, especialmente decisões arquiteturais e especificações.
-5. Execute `git status` e identifique a branch atual.
-6. Inspecione o código existente antes de criar arquivos ou assumir padrões.
-7. Declare, de forma breve, o que será alterado, quais arquivos serão afetados e como a mudança será validada.
+1. Leia `AGENTS.md` integralmente.
+2. Leia `CONTEXT.md` integralmente.
+3. Leia `HYPER_PROMPT.md` integralmente.
+4. Leia os documentos relacionados em `docs/`.
+5. Execute:
+   ```bash
+   git status
+   git branch --show-current
+   ```
+6. Inspecione o código existente antes de criar ou substituir arquivos.
+7. Registre um plano curto com:
+   - objetivo;
+   - arquivos ou módulos afetados;
+   - impacto de dados;
+   - riscos;
+   - testes;
+   - critério de conclusão.
 
-Nunca trate uma hipótese como requisito confirmado. Use as classificações:
+Nunca trate hipótese como requisito confirmado.
 
-- **CONFIRMADO**: aprovado pelos responsáveis do projeto.
-- **PROPOSTO**: recomendado, mas ainda não aprovado.
-- **PENDENTE**: precisa de decisão humana.
+Use sempre as classificações:
 
-Quando houver conflito entre documentos, siga esta ordem de precedência:
+- **CONFIRMADO**: aprovado por Eric ou pela Gestão da CIES.
+- **PROPOSTO**: decisão reversível adotada para avançar.
+- **PENDENTE**: exige decisão humana antes de produção.
+- **FORA DO ESCOPO**: não deve ser implementado nesta versão.
+
+## 2. Hierarquia de autoridade
+
+Quando houver conflito, siga esta ordem:
 
 1. Instrução explícita mais recente de Eric ou da Gestão da CIES.
-2. `HYPER_PROMPT.md`, quando existir e estiver aprovado.
+2. `HYPER_PROMPT.md`.
 3. `CONTEXT.md`.
-4. Este `AGENTS.md`.
-5. Documentos em `docs/decisions/` e especificações aprovadas.
-6. Código existente e convenções locais.
+4. `AGENTS.md`.
+5. ADRs e especificações aprovadas em `docs/`.
+6. Código e testes existentes.
+7. Convenções genéricas de tecnologia.
 
-Não altere requisitos confirmados silenciosamente. Registre a mudança e peça aprovação.
+Não altere silenciosamente regra confirmada.
 
----
+## 3. Missão do produto
 
-## 2. Missão do projeto
+Construir o **CIES Gestão**, sistema web interno que unifica:
 
-Construir um sistema web interno de gestão para a CIES que:
+- gestão de matrículas;
+- importação da planilha atual;
+- acompanhamento comercial B2C;
+- prospecção B2B e convênios;
+- atividades dos consultores;
+- metas;
+- KPIs;
+- relacionamento pós-matrícula;
+- campanhas;
+- planos de ação 5W2H;
+- relatórios e auditoria.
 
-- mantenha a planilha atual de matrículas como parte do processo;
-- importe e organize os dados da planilha;
-- permita edição manual dos dados importados por usuários autorizados;
-- gere dashboards, metas, KPIs, alertas e análises de gargalos;
-- apoie Gestão, Relacionamento, Comercial, Administrativo e Marketing;
-- não substitua os sistemas oficiais das faculdades;
-- não obrigue a equipe a registrar toda atividade operacional no sistema;
-- seja simples, intuitivo, seguro, auditável e adequado à rotina real da CIES.
+O sistema deve ajudar a CIES a responder rapidamente:
 
-O produto não é um clone dos sistemas da UniFecaf, UniFacvest ou FSL. É uma camada interna de gestão e inteligência da operação da CIES.
+- quanto já foi realizado;
+- quanto falta para a meta;
+- quais consultores, canais, cursos e instituições performam melhor;
+- em qual etapa os leads estão travando;
+- quais empresas estão próximas de fechar parceria;
+- quais parcerias realmente geram leads e matrículas;
+- quais matrículas ainda não subiram;
+- quais boas-vindas estão pendentes;
+- qual ação precisa ser executada.
 
----
+## 4. Restrições centrais
 
-## 3. Idioma, comunicação e nomenclatura
+O sistema:
 
-- Interface, mensagens de erro, documentação de negócio e textos para usuários: **português do Brasil**.
-- Código, nomes de arquivos técnicos, variáveis, funções, tipos, tabelas e commits: **inglês**, salvo termos de domínio cujo uso em português evite ambiguidade.
-- Use linguagem simples na interface. Evite jargão técnico para colaboradores da CIES.
-- Mensagens de erro devem explicar o problema e a ação necessária.
-- Nunca exponha stack traces, detalhes de infraestrutura/dados, tokens ou informações internas ao usuário final.
+- não substitui os sistemas oficiais das faculdades;
+- não substitui obrigatoriamente a planilha Google Sheets;
+- não substitui o WhatsApp;
+- não deve registrar cada atividade irrelevante da equipe;
+- não pode se transformar em burocracia paralela;
+- não pode conceder acesso apenas porque alguém possui uma conta Google;
+- não pode armazenar ou expor dados pessoais sem necessidade;
+- não pode calcular dinheiro usando ponto flutuante binário;
+- não pode depender apenas da interface para aplicar permissões.
 
-Exemplos de nomes técnicos preferidos:
-
-- `Enrollment`, `Student`, `Employee`, `ImportBatch`, `Goal`, `Kpi`, `Lead`, `Partnership`, `Campaign`, `SupportCase`.
-- `welcomeStatus` para BVS.
-- `releaseStatus` para Subiu?.
-- `referenceMonth` para o mês de referência.
-
----
-
-## 4. Equipe humana e autoridade de decisão
+## 5. Responsáveis humanos
 
 ### Eric — Product Owner operacional e líder de desenvolvimento
 
-- Conhece a rotina real da CIES e a planilha de matrículas.
-- Consolida requisitos, valida fluxos e coordena a construção.
-- Pode aprovar decisões de implementação que não alterem política empresarial.
+- Consolida requisitos.
+- Conhece a rotina da CIES.
+- Valida fluxos, experiência e regras operacionais.
+- Coordena desenvolvimento com seu primo.
+- Pode aprovar decisões técnicas reversíveis que não alterem política empresarial.
 
-### Primo de Eric — Desenvolvedor colaborador
+### Elen — Stakeholder principal da Gestão
 
-- Trabalha em branches próprias.
-- Abre pull requests com descrição, testes e evidências.
-- Não altera regras de negócio confirmadas sem alinhamento.
+- Aprova indicadores, metas, regras empresariais e permissões críticas.
+- Possui visão administrativa completa.
+- Aprova mudanças que alterem faturamento, política de matrícula válida ou acesso da equipe.
 
-### Elen — Stakeholder principal, Gestão/Coordenação/Comercial
+### Desenvolvedor colaborador — primo de Eric
 
-- Aprova escopo empresarial, indicadores, metas, regras de permissão e decisões que afetem a operação da CIES.
-- Possui visão administrativa completa no produto.
+- Trabalha em branch própria.
+- Abre pull request com testes e evidências.
+- Não modifica regra de negócio confirmada sem alinhamento.
 
-### Colaboradores da CIES
+### Equipe conhecida
 
-- Nayara — Relacionamento com o Aluno.
+- Eric — Relacionamento e desenvolvimento.
+- Elen — Gestão, Coordenação e Comercial.
+- Nayara — Relacionamento.
 - Bia — Administrativo, Marketing e Comercial.
 - Ninha — Consultoria Educacional e Comercial.
-- Eric — Relacionamento com o Aluno e desenvolvimento do sistema.
+- Três consultores externos — prospecção ativa B2C e B2B; nomes e contas serão cadastrados pela Gestão.
 
-Toda alteração que modifique permissões, cálculo de faturamento, regra de matrícula válida, metas, KPIs, importação ou tratamento de dados pessoais exige validação de Eric e, quando aplicável, de Elen.
+## 6. Papéis dos agentes
 
----
+### `@orchestrator`
 
-## 5. Papéis especializados dos agentes
+Responsável por:
 
-Um agente pode assumir mais de um papel, mas deve indicar qual papel está desempenhando em cada etapa.
+- entender a tarefa;
+- decompor o trabalho;
+- evitar conflito entre agentes;
+- manter consistência entre produto, banco, interface e testes;
+- revisar tudo antes da integração;
+- manter `docs/ai/` atualizado.
 
-### 5.1 `@orchestrator` — Orquestrador técnico
+Não deve aceitar saída de subagente sem verificar código, diff e testes.
 
-Responsabilidades:
+### `@product`
 
-- entender a solicitação;
-- consultar o contexto;
-- decompor a tarefa;
-- identificar dependências e riscos;
-- distribuir trabalho para subagentes quando vantajoso;
-- preservar consistência entre módulos;
-- entregar um resumo final verificável.
+Responsável por:
 
-Restrições:
+- converter necessidades em regras e critérios de aceitação;
+- evitar burocracia desnecessária;
+- separar confirmado, proposto e pendente;
+- preservar os não objetivos;
+- garantir que indicadores levem a decisões.
 
-- não iniciar uma mudança ampla sem plano;
-- não permitir que agentes diferentes editem os mesmos arquivos simultaneamente;
-- não aceitar resultados de subagentes sem revisão e testes.
+### `@ux`
 
-### 5.2 `@product` — Analista de produto e domínio
+Responsável por:
 
-Responsabilidades:
+- sistema visual profissional;
+- fluxo simples;
+- dashboard escaneável;
+- tabelas densas sem confusão;
+- responsividade;
+- acessibilidade;
+- estados de loading, vazio, erro e sucesso.
 
-- converter necessidades da CIES em regras de negócio e critérios de aceitação;
-- proteger o escopo contra funcionalidades desnecessárias;
-- separar requisito confirmado, proposta e pendência;
-- garantir que o sistema complemente, e não replique, os sistemas das faculdades.
+Não deve priorizar efeitos visuais sobre clareza.
 
-Restrições:
+### `@architect`
 
-- não inventar processos da CIES;
-- não transformar rotinas manuais em módulos obrigatórios sem aprovação;
-- não escrever código antes de o comportamento estar claro.
+Responsável por:
 
-### 5.3 `@architect` — Arquiteto de software
+- monólito modular;
+- limites de domínio;
+- modelo Firestore;
+- estratégia de consultas e índices;
+- ADRs;
+- integração segura entre Firebase Client SDK e Admin SDK.
 
-Responsabilidades:
+Não deve criar microserviços ou complexidade sem necessidade demonstrada.
 
-- propor arquitetura simples, modular, segura e sustentável;
-- manter fronteiras claras por domínio;
-- documentar decisões relevantes em ADRs;
-- evitar dependências desnecessárias e abstrações prematuras.
+### `@fullstack`
 
-Restrições:
+Responsável por:
 
-- preferir monólito modular para o MVP;
-- não introduzir microserviços, filas, event sourcing ou complexidade operacional sem necessidade demonstrada;
-- não trocar tecnologias aprovadas sem ADR e aprovação.
+- funcionalidades verticais completas;
+- React/Next.js;
+- Server Actions ou Route Handlers;
+- Firestore;
+- validação;
+- autorização;
+- testes.
 
-### 5.4 `@fullstack` — Engenheiro full-stack
+Não usar `any` sem justificativa e não colocar regra crítica apenas no JSX.
 
-Responsabilidades:
+### `@auth-security`
 
-- implementar funcionalidades completas, da interface ao Firestore e às regras de segurança;
-- respeitar permissões no servidor, não apenas na interface;
-- criar componentes reutilizáveis sem abstrair antes da hora;
-- manter TypeScript estrito e código legível.
+Responsável por:
 
-Restrições:
+- Google Sign-In;
+- cookie de sessão;
+- allowlist de colaboradores;
+- RBAC;
+- Security Rules;
+- autorização server-side;
+- proteção de dados;
+- auditoria;
+- CSRF, XSS, rate limiting e headers.
 
-- não usar `any` sem justificativa explícita;
-- não ignorar erros de lint, tipos ou build;
-- não colocar regra de negócio crítica somente em componentes de UI;
-- não duplicar lógica de validação em múltiplos pontos sem uma fonte comum.
+### `@data-import`
 
-### 5.5 `@data-import` — Especialista em importação e qualidade de dados
+Responsável por:
 
-Responsabilidades:
+- compatibilidade com a planilha histórica;
+- cabeçalhos;
+- normalização;
+- tri-state;
+- CPF;
+- moeda;
+- duplicidade;
+- prévia e relatório de importação;
+- idempotência;
+- preservação do arquivo original.
 
-- preservar compatibilidade com a planilha histórica da CIES;
-- validar cabeçalhos e tipos;
-- normalizar CPF, telefone, moeda, SIM/NÃO/vazio e instituição;
-- detectar duplicidades conforme as regras do domínio;
-- produzir prévia, alertas e relatório de importação;
-- garantir idempotência sempre que possível.
+### `@analytics`
 
-Restrições:
+Responsável por:
 
-- nunca considerar apenas o CPF como matrícula única;
-- nunca descartar linha silenciosamente;
-- nunca alterar o arquivo original enviado;
-- nunca converter erro de validação em dado válido por adivinhação.
+- catálogo de KPIs;
+- fórmulas centralizadas;
+- reconciliação entre cards, gráficos e tabelas;
+- filtros globais;
+- funis B2C e B2B;
+- metas e projeções;
+- performance por consultor, origem, empresa, instituição e curso.
 
-### 5.6 `@security` — Segurança, privacidade e autorização
+### `@qa`
 
-Responsabilidades:
+Responsável por:
 
-- revisar autenticação, autorização, logs e exposição de dados;
-- aplicar princípio do menor privilégio;
-- proteger CPF, telefone e informações financeiras;
-- revisar upload de arquivos e entradas não confiáveis;
-- impedir acesso indevido entre áreas.
+- critérios de aceitação;
+- testes unitários, integração, Rules e E2E;
+- cenários de erro e permissão;
+- evidências reproduzíveis;
+- acessibilidade e responsividade.
 
-Restrições:
+### `@devops`
 
-- autorização deve existir no servidor;
-- nenhum segredo pode ser commitado;
-- dados pessoais não devem aparecer em logs técnicos desnecessários;
-- arquivos importados não devem ser públicos.
+Responsável por:
 
-### 5.7 `@qa` — Qualidade e testes
+- scripts;
+- CI;
+- Firebase Emulator Suite;
+- configuração Vercel;
+- `.env.example`;
+- builds reproduzíveis;
+- preview por pull request;
+- documentação de ambiente.
 
-Responsabilidades:
+Nunca realizar deploy, push, merge ou mudança destrutiva sem autorização humana.
 
-- derivar testes dos critérios de aceitação;
-- testar fluxo feliz, bordas e falhas;
-- verificar regressões de importação, permissões e cálculos;
-- validar interface em desktop e telas menores;
-- registrar evidências reproduzíveis.
+## 7. Forma obrigatória de trabalhar
 
-Restrições:
+Para tarefas não triviais:
 
-- não declarar concluído sem executar os testes aplicáveis;
-- não limitar QA a “a página abriu”;
-- não corrigir silenciosamente comportamento que contradiga requisito confirmado.
+### Compreender
 
-### 5.8 `@devops` — Ambiente, CI e entrega
+- Ler contexto e código.
+- Identificar regra confirmada.
+- Identificar impacto em Auth, Firestore, Rules, índices, dinheiro, PII e KPIs.
+- Evitar perguntas que possam ser resolvidas pelo repositório ou por default reversível.
 
-Responsabilidades:
+### Planejar
 
-- padronizar versões e comandos;
-- manter `.env.example` atualizado;
-- configurar checks de CI;
-- garantir builds reproduzíveis;
-- documentar setup local e implantação.
+Criar plano pequeno e verificável.
 
-Restrições:
+### Implementar
 
-- não colocar credenciais em repositório;
-- não realizar deploy de produção sem aprovação humana;
-- não alterar Firestore, Security Rules, índices, Auth, IAM ou dados de produção sem plano de evolução, backup e rollback.
+- Mudanças coesas.
+- Uma fatia vertical por vez.
+- Sem refatoração ampla misturada com funcionalidade.
+- Sem sobrescrever trabalho não relacionado.
+- Sem criar páginas vazias apenas para “parecer completo”.
 
-### 5.9 `@ux` — UX, acessibilidade e design do sistema
+### Validar
 
-Responsabilidades:
-
-- criar fluxos diretos e consistentes;
-- priorizar leitura rápida de indicadores;
-- evitar excesso de campos e cliques;
-- garantir navegação por teclado, labels, contraste e estados de foco;
-- usar confirmações para ações sensíveis.
-
-Restrições:
-
-- não esconder informação crítica apenas em cor;
-- não usar dashboards decorativos sem utilidade decisória;
-- não sacrificar clareza por animações ou efeitos.
-
----
-
-## 6. Forma obrigatória de trabalhar
-
-Para qualquer tarefa não trivial, siga este ciclo:
-
-### Etapa 1 — Compreender
-
-- Leia contexto e código relacionado.
-- Identifique regras confirmadas.
-- Liste dúvidas bloqueadoras somente quando realmente impedirem a implementação.
-- Verifique se a tarefa altera Firestore, Rules, Auth, permissões, importação, índices ou cálculos.
-
-### Etapa 2 — Planejar
-
-Produza um plano curto contendo:
-
-- objetivo;
-- arquivos/módulos afetados;
-- migrações ou impactos de dados;
-- riscos;
-- testes a executar;
-- critérios de conclusão.
-
-### Etapa 3 — Implementar
-
-- Faça mudanças pequenas e coesas.
-- Preserve compatibilidade com o que já funciona.
-- Não reformate arquivos não relacionados.
-- Evite misturar refatoração ampla com nova funcionalidade na mesma PR.
-
-### Etapa 4 — Verificar
-
-Execute, conforme aplicável:
+Executar, quando disponíveis:
 
 ```bash
 npm run lint
 npm run typecheck
 npm run test
+npm run test:rules
 npm run test:e2e
 npm run build
+npm run verify
 ```
 
-Se algum script ainda não existir, registre isso e proponha sua criação. Nunca afirme que um teste passou sem executá-lo.
+Nunca afirmar que um comando passou sem executá-lo.
 
-### Etapa 5 — Revisar
+### Revisar
 
-- Revise o diff.
-- Procure vazamento de segredos e dados pessoais.
-- Confirme autorização no servidor.
-- Confirme critérios de aceitação.
-- Verifique estados de loading, vazio, erro e sucesso.
+- Revisar diff.
+- Procurar segredo e PII.
+- Verificar autorização no servidor.
+- Reconciliar cards, gráficos e tabelas.
+- Verificar loading, vazio, erro e sucesso.
+- Verificar teclado, foco, contraste e textos.
+- Verificar índices e custo de consulta.
 
-### Etapa 6 — Entregar
+### Entregar
 
-Inclua:
+Informar:
 
-- resumo do que mudou;
+- o que mudou;
 - arquivos principais;
-- testes executados e resultados;
-- limitações ou pendências;
-- instrução de validação manual;
-- impacto em `CONTEXT.md`, ADRs ou documentação.
-
----
-
-## 7. Git e colaboração entre dois desenvolvedores
-
-### 7.1 Branch principal
-
-- `main` deve permanecer estável e implantável.
-- É proibido trabalhar diretamente em `main`.
-- Todo trabalho entra por pull request.
-- Force push em `main` é proibido.
-
-### 7.2 Branches de trabalho
-
-Use branches curtas e focadas:
-
-```text
-feat/import-enrollments
-feat/dashboard-kpis
-fix/duplicate-detection
-refactor/permission-service
-docs/update-context
-chore/ci-pipeline
-```
-
-Padrão:
-
-```text
-<tipo>/<descricao-curta-em-kebab-case>
-```
-
-Tipos preferidos: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `hotfix`.
-
-Antes de iniciar:
-
-```bash
-git switch main
-git pull --ff-only
-git switch -c feat/nome-da-tarefa
-```
-
-Antes de abrir a PR:
-
-```bash
-git fetch origin
-git rebase origin/main
-```
-
-Nunca reescreva o histórico de uma branch que o outro desenvolvedor já esteja usando sem alinhamento.
-
-### 7.3 Commits
-
-Use Conventional Commits:
-
-```text
-feat(import): validate spreadsheet headers
-fix(enrollment): allow same cpf with different courses
-test(auth): cover server-side role restrictions
-docs(context): record approved KPI rules
-```
-
-Cada commit deve:
-
-- ter um objetivo claro;
-- compilar quando possível;
-- não conter segredos;
-- não misturar assuntos não relacionados.
-
-### 7.4 Pull requests
-
-Toda PR deve incluir:
-
-- problema resolvido;
-- solução aplicada;
-- screenshots para alterações visuais;
 - testes executados;
-- riscos e impacto no Firestore, Rules, índices e custos;
-- checklist de segurança e permissões;
-- referência à issue, quando houver.
+- resultado;
+- riscos;
+- pendências reais;
+- próximo passo exato.
 
-PRs devem ser pequenas o bastante para revisão real. Como regra prática, prefira uma funcionalidade vertical por PR.
+## 8. Git e colaboração
 
-### 7.5 Revisão
+- `main` deve permanecer estável.
+- Não trabalhar diretamente em `main`.
+- Toda mudança entra por pull request.
+- Não fazer force push em `main`.
+- Não reescrever branch compartilhada sem alinhamento.
+- Preferir squash merge.
 
-- O autor não aprova a própria PR como única revisão.
-- Mudanças em importação, Firebase Auth, Security Rules, autorização server-side, Firestore, dinheiro ou regras críticas exigem revisão do outro desenvolvedor.
-- Comentários bloqueadores precisam ser resolvidos antes do merge.
-- Preferir **Squash and merge** para manter histórico limpo.
+Branches:
 
----
+```text
+chore/project-bootstrap
+feat/google-auth-rbac
+feat/design-system-shell
+feat/b2c-pipeline
+feat/b2b-partnerships
+feat/sales-activities
+feat/goals-kpis
+feat/enrollment-import
+feat/executive-dashboard
+feat/reports-5w2h
+fix/<descricao>
+docs/<descricao>
+```
 
-## 8. Direção técnica inicial
+Commits:
 
-Estas diretrizes são a base técnica escolhida para o projeto:
+```text
+feat(auth): implement Google session login
+feat(leads): add B2C qualification pipeline
+feat(partnerships): add B2B company stages
+fix(enrollment): allow same cpf in different courses
+test(rules): block unauthorized seller changes
+docs(context): add external consultant workflow
+```
+
+## 9. Direção técnica
+
+### Stack
 
 - Next.js com App Router.
-- TypeScript em modo estrito.
 - React Server Components por padrão.
-- Client Components apenas quando houver interação, estado local, Firebase client SDK ou API de navegador.
-- Estilização com Tailwind CSS e componentes acessíveis.
-- Firebase Console como plataforma backend.
-- Cloud Firestore como banco documental.
-- Firebase Authentication para login individual de colaboradores.
-- Firebase Admin SDK somente no servidor.
-- Cookie de sessão seguro para autenticação SSR.
-- Firebase Security Rules para acessos do SDK cliente.
-- Autorização explícita no servidor para toda operação via Admin SDK.
-- Firebase Local Emulator Suite para desenvolvimento e testes.
-- Regras, índices e configuração Firebase versionados.
-- Firebase App Hosting como hospedagem-alvo proposta, conectada ao GitHub.
-- Validação de entrada compartilhada entre servidor e importação.
-- Autorização baseada em permissões por módulo e ação.
-- Aplicação inicialmente como monólito modular.
+- TypeScript estrito.
+- Tailwind CSS.
+- Componentes acessíveis, preferencialmente shadcn/ui.
+- Firebase Authentication.
+- Google como provedor de login da V1.
+- Cloud Firestore.
+- Firebase Admin SDK exclusivamente no servidor.
+- Firebase Security Rules para acessos pelo Client SDK.
+- Firebase Emulator Suite.
+- Vercel como hospedagem-alvo da aplicação.
+- GitHub para versionamento, CI e colaboração.
+- Google Antigravity como ambiente/agente de desenvolvimento.
 
-Não fixe versões manualmente neste documento. Use versões estáveis no momento da inicialização, registre-as em `package.json` e no lockfile e evite upgrades automáticos durante o MVP.
+Não fixe versões neste arquivo. Use versões estáveis atuais, lockfile e documentação oficial.
 
-### 8.1 Organização sugerida
+### Princípios arquiteturais
+
+- Monólito modular.
+- Server-first.
+- Client Components somente quando houver interação real.
+- Validação compartilhada com schemas.
+- Camada central de autorização.
+- Camada central de métricas.
+- Repositórios Firestore tipados.
+- Paginação por cursor.
+- Índices planejados.
+- Nenhum dashboard deve baixar coleções inteiras para somar no navegador.
+
+### Organização sugerida
 
 ```text
 src/
   app/
+    (auth)/
+    (dashboard)/
+    api/
   components/
     ui/
     shared/
+    charts/
+    tables/
   features/
     auth/
     dashboard/
+    leads/
+    companies/
+    partnerships/
+    sales-activities/
+    goals/
     enrollments/
     imports/
-    goals/
-    kpis/
     employees/
-    leads/
-    partnerships/
     campaigns/
-    support-cases/
+    relationship/
     action-plans/
     reports/
+    settings/
   lib/
     firebase/
-      client.ts
-      admin.ts
-      auth-session.ts
-      converters/
-      repositories/
     permissions/
     validation/
+    money/
+    dates/
+    metrics/
   server/
     auth/
     actions/
     repositories/
     services/
+    metrics/
   types/
   validators/
-
-firebase.json
-.firebaserc.example
-firestore.rules
-firestore.indexes.json
-storage.rules  # somente quando necessário
-apphosting.yaml # quando configurado
 docs/
+  ai/
+  architecture/
   decisions/
   specifications/
   test-plans/
-public/
-.agents/
-  skills/
-  workflows/
+firestore.rules
+firestore.indexes.json
+firebase.json
+.env.example
 ```
 
-A estrutura final deve refletir o Firebase e o domínio. Não crie pastas vazias apenas para parecer “enterprise”.
+Não crie pastas vazias sem função real.
 
-## 9. Regras de domínio que nunca podem ser quebradas
+## 10. Autenticação Google — regra obrigatória
 
-### 9.1 Aluno e matrícula
+### Fluxo
 
-- Um aluno pode possuir várias matrículas.
-- CPF identifica o aluno, não uma matrícula isolada.
-- Matrícula não pode ser considerada única somente pelo CPF.
-- A chave de duplicidade do período deve considerar, no mínimo:
+1. Usuário clica em **Entrar com Google**.
+2. Firebase Authentication autentica a conta Google.
+3. O cliente envia o ID token ao endpoint server-side de sessão.
+4. O servidor verifica:
+   - assinatura e validade do token;
+   - e-mail verificado;
+   - e-mail presente na allowlist interna;
+   - colaborador ativo;
+   - perfil e permissões válidos.
+5. O servidor cria cookie de sessão `HttpOnly`, `Secure` em produção e `SameSite`.
+6. Rotas protegidas usam verificação server-side.
+7. Logout revoga/remove a sessão.
+8. Usuário autenticado no Google, mas não autorizado na CIES, recebe a mensagem:
+   **“Sua conta Google foi reconhecida, mas ainda não possui acesso ao CIES Gestão. Solicite liberação à Gestão.”**
+
+### Regras
+
+- Não existe cadastro público.
+- Não conceder acesso automático por domínio sem decisão confirmada.
+- A allowlist é administrada apenas por Gestão/Admin.
+- O usuário não pode alterar as próprias áreas ou permissões.
+- UID, e-mail normalizado e status devem ser verificados no servidor.
+- Firebase Admin SDK ignora Security Rules; cada operação deve autorizar explicitamente.
+- Não confiar em role enviada pelo cliente.
+- Login por popup deve possuir fallback por redirect quando necessário.
+- Registrar login, logout, bloqueios e alterações de acesso sem armazenar token.
+
+## 11. Modelo de permissões
+
+Permissões são por módulo e ação, não apenas por cargo.
+
+Exemplo:
+
+```ts
+type Permission =
+  | "dashboard.view"
+  | "leads.view"
+  | "leads.create"
+  | "leads.edit"
+  | "leads.assign"
+  | "companies.view"
+  | "companies.create"
+  | "companies.edit"
+  | "partnerships.manage"
+  | "activities.create"
+  | "activities.view_team"
+  | "goals.manage"
+  | "enrollments.view"
+  | "enrollments.edit"
+  | "enrollments.change_seller"
+  | "enrollments.change_amount"
+  | "imports.execute"
+  | "imports.rollback"
+  | "users.manage"
+  | "reports.export";
+```
+
+### Gestão
+
+- Acesso total.
+- Administra allowlist, usuários e permissões.
+- Pode mudar vendedor e valor.
+- Pode configurar metas.
+- Pode reverter importação.
+- Ações críticas exigem confirmação e auditoria.
+
+### Relacionamento
+
+- Pode editar qualquer matrícula.
+- Pode atualizar `Subiu?` e `BVS?`.
+- Pode abrir Redirect/WhatsApp.
+- Não altera Vendedor.
+- Valor permanece protegido.
+
+### Administrativo
+
+- Pode importar e revisar matrículas.
+- Pode atuar em campos administrativos autorizados.
+- Pode alterar Vendedor quando possuir a permissão confirmada.
+
+### Comercial interno
+
+- Pode acessar leads, empresas, convênios, atividades, metas e resultados conforme sua carteira/permissões.
+
+### Consultor externo
+
+- Pode visualizar e editar seus próprios leads, empresas, contatos, atividades, reuniões, propostas e oportunidades.
+- Pode visualizar sua meta e seu desempenho.
+- Não pode visualizar CPF completo ou valor protegido sem necessidade.
+- Não pode alterar permissões, vendedor histórico, valor de matrícula, lotes ou dados de outros consultores, salvo permissão explícita.
+
+### Marketing
+
+- Pode visualizar campanhas, origens, leads agregados e conversões.
+- Não recebe edição de dados críticos por inferência.
+
+## 12. Regras de negócio de matrículas
+
+- Um aluno pode ter várias matrículas.
+- CPF identifica o aluno, não a matrícula isolada.
+- Mesmo CPF com curso diferente deve ser permitido.
+- Duplicidade considera, no mínimo:
   - CPF normalizado;
   - curso normalizado;
   - instituição;
   - mês de referência.
-- Mesmo CPF com curso diferente deve ser permitido.
-- Mesmo CPF, curso, instituição e mês deve ser tratado como duplicidade ou atualização, nunca inserido silenciosamente.
+- Mesmo conjunto no mesmo período deve ser sinalizado como duplicidade ou atualização.
+- Nenhuma linha pode desaparecer silenciosamente.
+- `BVS?` e `Subiu?` são tri-state:
+  - SIM;
+  - NÃO;
+  - NÃO INFORMADO.
+- Vazio nunca é convertido automaticamente para NÃO.
+- `Subiu? = SIM` e `BVS? != SIM` gera boas-vindas pendentes.
+- Valor deve ser armazenado em centavos inteiros.
+- Vendedor somente Gestão/Admin altera.
+- Dados importados podem ser editados conforme permissão.
+- Faturamento total e faturamento válido são métricas diferentes.
 
-### 9.2 Importação
-
-Cabeçalhos esperados da planilha histórica:
+Cabeçalhos históricos:
 
 ```text
 Aluno
@@ -519,375 +586,436 @@ Curso
 Pagamento
 ```
 
-Regras:
+## 13. Regras comerciais B2C
 
-- O mês de referência é obrigatório para a importação.
-- Data exata de matrícula não é requisito atual.
-- O arquivo deve ser validado antes de persistir dados.
-- O usuário deve ver prévia, erros, avisos e possíveis duplicidades.
-- Linhas inválidas devem ser explicadas.
-- Dados importados podem ser alterados posteriormente por usuários autorizados.
-- Importações devem ter histórico: responsável, momento, arquivo, mês, totais e resultado.
-- Se houver atualização de matrícula existente, a decisão deve ser explícita e auditável.
-
-### 9.3 Estados tri-state
-
-`BVS?` e `Subiu?` possuem três estados reais:
+### Status permitidos
 
 ```text
-SIM
-NÃO
-NÃO INFORMADO / VAZIO
+Novo
+Primeiro contato
+Em atendimento
+Qualificado
+Proposta enviada
+Negociação
+Follow-up
+Matriculado
+Perdido
+Sem retorno
 ```
 
-Nunca converter vazio automaticamente para NÃO.
+### Campos mínimos
 
-### 9.4 Regra automática de boas-vindas
+- nome;
+- telefone;
+- cidade;
+- curso de interesse;
+- modalidade;
+- instituição de interesse;
+- origem;
+- consultor responsável;
+- status;
+- último contato;
+- próximo contato;
+- valor potencial opcional;
+- motivo de perda;
+- observação objetiva;
+- datas de criação e atualização.
 
-Quando:
+### Regras
+
+- Todo lead deve possuir responsável.
+- Próximo contato deve ser visível quando o lead não está encerrado.
+- Mudança para `Matriculado` deve permitir vincular a matrícula criada/importada.
+- Motivo de perda é obrigatório ao marcar `Perdido`.
+- Duplicidade de lead deve considerar telefone normalizado e contexto, sem bloquear automaticamente casos legítimos.
+- O sistema deve destacar follow-ups vencidos.
+- O consultor externo vê principalmente sua carteira.
+- Gestão pode redistribuir carteira com auditoria.
+
+## 14. Regras comerciais B2B
+
+### Funil
 
 ```text
-Subiu? = SIM
-E
-BVS? = NÃO ou NÃO INFORMADO
+Prospectada
+Contato realizado
+Decisor identificado
+Reunião agendada
+Reunião realizada
+Proposta enviada
+Em negociação
+Parceria aprovada
+Parceria ativa
+Sem interesse
 ```
 
-A matrícula deve aparecer automaticamente em **Boas-vindas pendentes**.
+### Campos mínimos de empresa
 
-### 9.5 Valores financeiros
+- razão/nome da empresa;
+- CNPJ opcional no início;
+- segmento;
+- cidade/bairro;
+- número estimado de funcionários;
+- contato;
+- cargo do contato;
+- telefone;
+- e-mail;
+- consultor responsável;
+- status;
+- último contato;
+- próximo passo;
+- data do próximo passo;
+- observações;
+- origem da prospecção.
 
-- Entrada no padrão brasileiro, por exemplo `R$ 199,90`.
-- Armazenar como decimal exato ou centavos inteiros; nunca usar ponto flutuante binário para dinheiro.
-- O dashboard deve mostrar:
-  - faturamento total da planilha;
-  - faturamento de matrículas válidas.
-- A definição de “matrícula válida” deve ser centralizada e testada.
-- O campo Valor é protegido.
+### Regras
 
-### 9.6 Vendedor
+- “Empresa visitada” não é resultado suficiente; registrar estágio, contato e próximo passo.
+- Contato decisor deve ser distinguido de contato genérico.
+- Reunião realizada, proposta enviada e parceria aprovada devem possuir data.
+- Parceria ativa deve poder gerar leads e matrículas associados.
+- Sem interesse deve registrar motivo e possibilidade de reativação.
+- Empresa não deve ser duplicada apenas por variação de escrita; usar CNPJ quando existente e normalização quando não existir.
+- Métricas B2B devem separar empresas prospectadas, contatos efetivos, reuniões, propostas, parcerias e matrículas geradas.
 
-- O nome da coluna `Vendedor` representa quem fechou a matrícula.
-- O vendedor deve ser vinculado a um colaborador do sistema quando possível.
-- Somente Gestão/Admin pode alterar vendedor após a importação.
-- Nomes não reconhecidos devem ir para revisão, não ser vinculados por adivinhação.
+## 15. Atividades dos consultores
 
-### 9.7 Campos controlados
+Atividades relevantes:
 
-- Instituição inicial: `UniFecaf`, `UniFacvest`, `FSL`.
-- Pagamento inicial: `Pix`, `Boleto`, `Cartão`.
-- `Tipo` é opcional e pode permanecer vazio.
-- Curso é copiado do sistema da faculdade e deve preservar o nome oficial recebido, com uma versão normalizada separada somente se necessário para agrupamento.
-- `Redirect` deve ser tratado como atalho de WhatsApp, validado e nunca executado como conteúdo arbitrário.
+- ligação;
+- WhatsApp;
+- novo contato;
+- follow-up;
+- visita;
+- empresa prospectada;
+- reunião;
+- proposta;
+- matrícula.
 
----
+Sempre que possível, gerar atividade automaticamente a partir de mudanças reais no sistema. Entrada manual deve ser rápida e não burocrática.
 
-## 10. Permissões e autorização
+Campos:
 
-A interface pode esconder ou desabilitar ações, mas a segurança real deve ser aplicada no servidor.
+- data e hora;
+- consultor;
+- tipo;
+- entidade relacionada;
+- resultado;
+- próximo passo;
+- observação curta;
+- origem automática ou manual.
 
-### 10.1 Princípios
+Não usar apenas contadores manuais desconectados das entidades.
 
-- Negar por padrão.
-- Permissão por módulo e ação, não apenas por cargo único.
-- Um usuário pode atuar em mais de uma área.
-- Leitura e edição são permissões diferentes.
-- Toda ação crítica deve identificar o usuário autenticado.
+## 16. Metas
 
-### 10.2 Regras confirmadas
+Metas podem ser:
 
-#### Gestão
+- geral da CIES;
+- por consultor;
+- por equipe;
+- por instituição;
+- por período;
+- por métrica.
 
-- Acesso total.
-- Pode criar, editar, invalidar, arquivar, restaurar e administrar usuários/permissões.
-- Ações críticas exigem confirmação visual.
+Métricas de meta:
 
-#### Relacionamento com o Aluno
+- leads;
+- contatos efetivos;
+- reuniões;
+- propostas;
+- parcerias;
+- matrículas;
+- faturamento.
 
-- Qualquer pessoa da área pode editar qualquer matrícula.
-- Pode atualizar `Subiu?` e `BVS?`.
-- Pode acessar o Redirect do aluno.
-- Não pode alterar Vendedor.
-- Valor permanece protegido.
+Toda meta deve possuir:
 
-#### Administrativo
+- período;
+- escopo;
+- métrica;
+- alvo;
+- responsável;
+- status;
+- criado por;
+- data de criação;
+- regra de cálculo;
+- realizado calculado.
 
-- Pode importar e revisar dados.
-- Pode editar campos administrativos autorizados.
-- Pode alterar Vendedor conforme regra confirmada.
-- Pode atuar em outros módulos se sua permissão individual permitir.
+Não permitir que o usuário digite manualmente o realizado quando ele puder ser calculado.
 
-#### Comercial e Marketing
+## 17. KPIs e dashboards
 
-- As permissões detalhadas ainda devem ser validadas com a Gestão.
-- Não conceder edição de dados críticos por inferência.
+### KPIs executivos
 
-### 10.3 Ações destrutivas
-
-Preferir:
-
-- arquivar;
-- cancelar;
-- marcar como inválido;
-- marcar como duplicado;
-- restaurar;
-- reverter lote de importação.
-
-Evitar exclusão física. Quando exclusão física for realmente necessária:
-
-- exigir permissão elevada;
-- mostrar confirmação explícita;
-- registrar auditoria;
-- impedir exclusão em cascata acidental.
-
----
-
-## 11. Segurança e privacidade
-
-Regras específicas do Firebase:
-
-- Firebase Admin SDK é exclusivo do servidor e ignora Security Rules; autorize explicitamente cada operação.
-- Security Rules devem negar por padrão, restringir campos e ser testadas no Emulator Suite.
-- O usuário nunca pode editar suas próprias áreas, funções ou permissões.
-- CPF não pode aparecer em ID de documento, URL, log, analytics ou nome de arquivo.
-- A fingerprint de duplicidade deve ser HMAC gerada no servidor.
-- Firebase client config pode estar no cliente, mas credenciais administrativas e secrets nunca.
-- App Check, IAM mínimo, alertas de orçamento e backup são gates de produção.
-
-
-O sistema processa dados pessoais. Portanto:
-
-- Nunca usar dados reais em testes automatizados, screenshots públicas ou issues.
-- Criar fixtures fictícias.
-- Mascarar CPF e telefone em telas onde o valor completo não seja necessário.
-- Não registrar CPF, telefone, token ou conteúdo integral de planilha em logs de aplicação.
-- Validar tamanho, extensão e conteúdo de uploads.
-- Armazenar arquivos em área privada ou descartá-los após processamento conforme política aprovada.
-- Implementar rate limiting onde houver risco de abuso.
-- Aplicar proteção contra CSRF quando pertinente à estratégia de autenticação.
-- Usar repositórios Firestore tipados, queries indexadas e validação server-side.
-- Validar autorização em Server Actions, Route Handlers e consultas.
-- Nunca confiar em role/permission enviada pelo cliente.
-- Manter `.env`, chaves e credenciais fora do Git.
-- Atualizar `.env.example` somente com nomes de variáveis e exemplos não secretos.
-
-Qualquer decisão de retenção de arquivos, backups ou dados deve ser documentada.
-
----
-
-## 12. UX e interface
-
-### 12.1 Princípios
-
-- Dashboard deve ser compreendido rapidamente.
-- Filtros por mês/período devem ser consistentes em todo o sistema.
-- Tabelas devem ter busca, filtros, paginação e estados claros.
-- Ação primária deve estar visível; ações perigosas devem estar separadas.
-- Não usar apenas verde/amarelo/vermelho: incluir rótulo, ícone ou texto.
-- Exibir loading, vazio, erro e sucesso.
-- Manter navegação consistente por área.
-- Responsividade deve priorizar desktop, sem tornar celular inutilizável.
-
-### 12.2 Confirmações
-
-Usar modal de confirmação para:
-
-- invalidar matrícula;
-- arquivar registro;
-- reverter importação;
-- alterar valor;
-- alterar vendedor;
-- excluir usuário;
-- mudar permissão crítica.
-
-O modal deve explicar consequência e possibilidade de reversão.
-
-### 12.3 Acessibilidade
-
-- Labels associados aos campos.
-- Foco visível.
-- Navegação por teclado.
-- Contraste adequado.
-- Ícones com texto acessível.
-- Tabelas e gráficos com alternativa textual.
-
----
-
-## 13. Testes mínimos obrigatórios
-
-### 13.1 Importação
-
-Cobrir:
-
-- planilha válida;
-- coluna obrigatória ausente;
-- colunas em ordem diferente;
-- SIM/NÃO/vazio;
-- valor `R$ 199,90`;
-- CPF com máscara e sem máscara;
-- CPF repetido com curso diferente;
-- duplicado exato no mesmo mês;
-- mesmo aluno em instituição diferente;
-- vendedor desconhecido;
-- curso vazio;
-- lote parcialmente inválido;
-- reimportação do mesmo lote;
-- atualização manual após importação.
-
-### 13.2 Permissões
-
-Cobrir:
-
-- Relacionamento edita matrícula de outro colaborador da mesma área;
-- Relacionamento não altera Vendedor;
-- usuário sem permissão não contorna restrição por requisição direta;
-- Gestão acessa ações administrativas;
-- permissões múltiplas por usuário;
-- ação destrutiva gera auditoria.
-
-### 13.3 KPIs e dinheiro
-
-Cobrir:
-
+- matrículas totais;
+- matrículas válidas;
+- meta x realizado;
+- faltante para a meta;
 - faturamento total;
 - faturamento válido;
-- matrícula inválida excluída somente do cálculo válido;
-- arredondamento monetário;
-- BVS pendente automática;
-- filtros por mês;
-- agrupamento por instituição, curso e vendedor.
+- taxa de liberação;
+- BVS pendentes;
+- conversão geral de leads;
+- parcerias ativas.
 
-### 13.4 Interface
+### KPIs B2C
 
-Cobrir os fluxos críticos em E2E:
+- leads novos;
+- taxa de contato;
+- taxa de qualificação;
+- propostas enviadas;
+- conversão lead → matrícula;
+- follow-ups vencidos;
+- tempo médio por etapa quando houver datas confiáveis;
+- matrículas por origem;
+- matrículas por consultor;
+- motivos de perda.
 
-1. login;
-2. importar planilha;
-3. revisar duplicidade;
-4. confirmar importação;
-5. editar matrícula;
-6. marcar `Subiu? = SIM`;
-7. visualizar pendência de BVS;
-8. marcar BVS enviada;
-9. validar atualização do dashboard.
+### KPIs B2B
 
----
+- empresas prospectadas;
+- contatos efetivos;
+- decisores identificados;
+- reuniões agendadas e realizadas;
+- propostas enviadas;
+- parcerias aprovadas;
+- parcerias ativas;
+- conversão empresa → parceria;
+- leads por parceria;
+- matrículas por parceria;
+- receita por parceria.
 
-## 14. Definition of Done
+### Guardrails
+
+- leads sem responsável;
+- oportunidades sem próximo passo;
+- follow-ups vencidos;
+- empresas duplicadas;
+- parcerias sem ação recente;
+- matrículas sem origem;
+- divergência entre cards, gráficos e tabela;
+- dados desatualizados;
+- consultas excessivas.
+
+Cada KPI deve ter definição, fórmula, fonte, granularidade e filtros.
+
+## 18. UX e sistema visual
+
+### Direção
+
+- Sistema empresarial moderno e confiável.
+- Desktop-first, responsivo.
+- Interface em português do Brasil.
+- Sidebar recolhível.
+- Header com período global, busca e perfil.
+- Navegação simples.
+- Cards apenas quando ajudam a decidir.
+- Gráficos 2D simples.
+- Tabelas com busca, filtros, paginação, ordenação e ações.
+- Drawer ou modal para edição rápida.
+- Feedback por toast e mensagens inline.
+- Skeletons consistentes.
+- Empty states úteis.
+- Sem gradientes aleatórios, gráficos 3D ou animações excessivas.
+
+### Design tokens propostos
+
+Até a identidade visual oficial ser fornecida:
+
+- azul-marinho como cor estrutural;
+- azul médio como ação primária;
+- verde apenas para sucesso;
+- âmbar para atenção;
+- vermelho para risco;
+- neutros claros para fundo;
+- tipografia sem serifa legível;
+- bordas discretas;
+- sombras leves.
+
+Tokens devem estar centralizados e ser facilmente substituíveis.
+
+### Dashboard
+
+A primeira dobra deve responder o estado do período sem rolagem excessiva:
+
+1. filtros globais;
+2. hero KPIs;
+3. progresso de meta;
+4. tendência;
+5. funil;
+6. ranking;
+7. alertas acionáveis.
+
+Não duplicar a mesma informação em muitos cards.
+
+## 19. Segurança e privacidade
+
+- Negar por padrão.
+- Admin SDK somente no servidor.
+- Security Rules testadas no emulador.
+- PII mascarada quando possível.
+- CPF nunca em URL, ID de documento, log, analytics ou nome de arquivo.
+- Logs sem token, cookie, CPF, telefone ou planilha bruta.
+- Dados reais nunca em seed, teste, screenshot público ou issue.
+- Upload validado por tipo, tamanho e conteúdo.
+- Arquivo de importação descartado após processamento por padrão.
+- Auditoria append-only para ações críticas.
+- Rate limiting em login, sessão, importação e mutações sensíveis.
+- Headers de segurança.
+- Secrets fora do Git.
+- `.env.example` sem valor real.
+- App Check considerado para produção.
+- Backups e alertas de orçamento antes da produção.
+
+## 20. Testes mínimos
+
+### Auth
+
+- Google login autorizado;
+- Google login de e-mail não autorizado;
+- e-mail não verificado;
+- usuário desativado;
+- sessão expirada;
+- logout;
+- acesso direto a rota protegida;
+- autoelevação de permissão;
+- alteração de allowlist sem permissão.
+
+### B2C
+
+- criação;
+- atribuição;
+- status;
+- próximo contato;
+- follow-up vencido;
+- motivo de perda;
+- conversão em matrícula;
+- carteira do consultor.
+
+### B2B
+
+- empresa sem CNPJ;
+- empresa com CNPJ;
+- duplicidade;
+- decisor;
+- reunião;
+- proposta;
+- parceria;
+- leads e matrículas por parceria;
+- acesso apenas à carteira quando aplicável.
+
+### Matrículas e importação
+
+- cabeçalho ausente;
+- moeda brasileira;
+- CPF mascarado e não mascarado;
+- tri-state;
+- mesmo CPF em curso diferente;
+- duplicado exato;
+- vendedor desconhecido;
+- reimportação;
+- edição posterior;
+- proteção de Valor e Vendedor.
+
+### KPIs
+
+- fórmulas;
+- filtros;
+- metas;
+- reconciliação;
+- zero denominador;
+- períodos vazios;
+- origem e consultor;
+- B2C e B2B.
+
+### E2E
+
+1. login Google;
+2. dashboard;
+3. criar lead;
+4. avançar lead;
+5. criar empresa;
+6. registrar reunião;
+7. fechar parceria;
+8. converter lead;
+9. importar matrícula;
+10. atualizar Subiu;
+11. concluir BVS;
+12. confirmar atualização dos indicadores.
+
+## 21. Definition of Done
 
 Uma tarefa só está concluída quando:
 
-- o comportamento atende aos critérios de aceitação;
-- autorização foi aplicada no servidor;
-- estados de erro, vazio, loading e sucesso foram tratados;
-- testes aplicáveis foram criados e executados;
-- lint, tipos e build passam;
-- não há segredo ou dado real exposto;
-- Security Rules, índices e scripts de evolução de dados foram revisados;
-- documentação relevante foi atualizada;
-- o diff foi revisado;
-- a PR possui descrição e evidências;
-- a alteração foi validada por outro desenvolvedor quando crítica.
+- atende ao critério de aceitação;
+- possui autorização server-side;
+- valida entradas;
+- trata loading, vazio, erro e sucesso;
+- testes aplicáveis passam;
+- lint passa;
+- typecheck passa;
+- build passa;
+- não contém segredo ou dado real;
+- documentação foi atualizada;
+- diff foi revisado;
+- evidência foi registrada;
+- interface foi validada em desktop e mobile;
+- cards, gráficos e tabelas reconciliam;
+- alteração crítica foi revisada por outro desenvolvedor.
 
-“Funciona na minha máquina” não é Definition of Done.
+## 22. Ações proibidas
 
----
-
-## 15. Documentação viva
-
-Atualize `CONTEXT.md` somente quando houver uma decisão confirmada ou mudança real de escopo.
-
-Crie ADR em `docs/decisions/` quando decidir:
-
-- Firebase, Firestore e estratégia de acesso a dados;
-- autenticação;
-- modelo de permissões;
-- armazenamento/processamento de planilhas;
-- estratégia de auditoria;
-- hospedagem;
-- política de backups;
-- integração futura com Google Sheets ou WhatsApp.
-
-Formato sugerido:
-
-```text
-docs/decisions/0001-firebase-and-firestore.md
-```
-
-Cada ADR deve conter contexto, decisão, alternativas e consequências.
-
-Não use `CONTEXT.md` como diário de desenvolvimento. Use changelog, issues, PRs e ADRs.
-
----
-
-## 16. Regras para Antigravity e agentes autônomos
-
-- Trabalhe apenas dentro do diretório do projeto.
-- Não acesse arquivos externos sem necessidade e aprovação.
-- Não execute comandos destrutivos automaticamente.
-- Peça confirmação antes de apagar arquivos, apagar coleções, reverter backfills ou alterar Rules/índices, alterar muitas dependências ou fazer deploy.
-- Prefira artifacts verificáveis: planos, especificações, diffs, resultados de testes e screenshots.
-- Use subagentes para pesquisa, QA e revisão, mas mantenha um único responsável pela integração.
-- Não aceite a saída de um agente como verdade sem verificar no código e no terminal.
-- Ao receber o futuro `HYPER_PROMPT.md`, trate-o como especificação abrangente, não como autorização para ignorar testes, revisão ou segurança.
-- Um “prompt único” pode iniciar a construção, mas o agente deve trabalhar em etapas verificáveis e interromper em decisões pendentes.
-
----
-
-## 17. Ações proibidas
-
-- Commitar `.env`, tokens, senhas, dumps ou planilhas reais.
+- Commitar `.env`, tokens ou planilhas reais.
 - Fazer push direto em `main`.
-- Desativar testes para obter build verde.
-- Usar `// @ts-ignore` ou `eslint-disable` sem justificativa localizada.
-- Alterar regra confirmada para facilitar implementação.
-- Considerar CPF repetido como duplicidade automática.
-- Transformar vazio de BVS/Subiu em NÃO.
-- Armazenar dinheiro em `float`.
-- Autorizar ações apenas escondendo botões.
-- Apagar registros críticos sem auditoria.
-- Criar integração falsa com sistemas das faculdades.
-- Expor dados completos de alunos em dashboards desnecessariamente.
-- Adicionar biblioteca sem verificar necessidade, manutenção e impacto.
-- Declarar tarefa concluída sem testes executados.
+- Apagar dados sem plano e autorização.
+- Autorizar ação apenas escondendo botão.
+- Permitir acesso a qualquer conta Google.
+- Usar CPF como ID.
+- Usar `float` para dinheiro.
+- Transformar vazio em NÃO.
+- Descartar linha silenciosamente.
+- Alterar vendedor ou valor sem permissão.
+- Baixar toda coleção no cliente para calcular dashboard.
+- Criar integração falsa com sistemas de faculdade.
+- Declarar “100% funcional” sem testes e evidências.
+- Substituir arquivos humanos não relacionados.
+- Instalar dependências sem necessidade.
 
----
-
-## 18. Formato de entrega do agente
-
-Ao concluir uma tarefa, responda neste formato:
+## 23. Formato de entrega
 
 ```markdown
-## Resultado
-Resumo objetivo da mudança.
+# Resultado
+
+## Estado
+Concluído | Parcial | Bloqueado
+
+## Entregue
+- ...
 
 ## Arquivos principais
-- caminho/arquivo: finalidade
+- ...
 
-## Validação
-- comando: resultado
-- teste manual: resultado
+## Dados, Rules e índices
+- ...
 
-## Segurança e permissões
-O que foi verificado.
+## Auth, permissões e segurança
+- ...
 
-## Pendências ou riscos
-Somente itens reais.
+## Verificações
+- comando — PASS/FAIL
 
-## Próximo passo recomendado
-Uma ação específica.
+## Evidências
+- ...
+
+## Pendências reais
+- ...
+
+## Próximo passo exato
+- ...
 ```
 
----
+## 24. Lembrete central
 
-## 19. Lembrete central
+O sucesso não é quantidade de telas.
 
-O sucesso do projeto não é medido pela quantidade de telas ou código gerado. É medido pela capacidade de a CIES:
-
-- enxergar metas e resultados;
-- identificar gargalos;
-- acompanhar matrículas e boas-vindas;
-- entender desempenho por colaborador, curso e instituição;
-- agir com base em dados;
-- manter uma rotina simples para a equipe.
-
-Construa o sistema para a operação real, não para uma demonstração artificial.
+O sistema será bem-sucedido quando a equipe conseguir usar o CIES Gestão sem treinamento complexo, enxergar o funil comercial e a operação de matrículas, identificar gargalos e tomar decisões com dados confiáveis.

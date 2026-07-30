@@ -59,9 +59,13 @@ export async function getCampaigns(filters?: { period?: string; channel?: string
     }
 
     return { success: true, data: campaigns };
-  } catch (error: any) {
-    console.error('Erro ao buscar campanhas:', error);
-    return { success: false, error: error.message || 'Erro interno.' };
+  } catch (error: unknown) {
+    const errMessage = error instanceof Error ? error.message : 'Erro interno.';
+    console.error('Erro em campanhas:', error);
+    if (error instanceof z.ZodError) {
+      return { success: false, error: error.issues[0].message };
+    }
+    return { success: false, error: errMessage };
   }
 }
 
@@ -99,12 +103,13 @@ export async function createCampaign(data: unknown) {
     await docRef.set(campaignData);
     
     return { success: true, data: campaignData };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao criar campanha:', error);
     if (error instanceof z.ZodError) {
       return { success: false, error: error.issues[0].message };
     }
-    return { success: false, error: error.message || 'Erro interno.' };
+    const errMessage = error instanceof Error ? error.message : 'Erro interno.';
+    return { success: false, error: errMessage };
   }
 }
 
@@ -136,12 +141,13 @@ export async function updateCampaign(id: string, data: unknown) {
     await docRef.update(updateData);
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao atualizar campanha:', error);
     if (error instanceof z.ZodError) {
       return { success: false, error: error.issues[0].message };
     }
-    return { success: false, error: error.message || 'Erro interno.' };
+    const errMessage = error instanceof Error ? error.message : 'Erro interno.';
+    return { success: false, error: errMessage };
   }
 }
 
@@ -162,8 +168,9 @@ export async function deleteCampaign(id: string) {
     await db.collection(COLLECTION_NAME).doc(id).delete();
     
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Erro ao deletar campanha:', error);
-    return { success: false, error: error.message || 'Erro interno.' };
+    const errMessage = error instanceof Error ? error.message : 'Erro interno.';
+    return { success: false, error: errMessage };
   }
 }

@@ -1,13 +1,13 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Megaphone, Plus, TrendingUp, Users, Target, Banknote, Edit3, Trash2, CheckCircle2 } from 'lucide-react';
 import FilterSelect from '@/components/shared/FilterSelect';
 import PeriodSelector from '@/components/shared/PeriodSelector';
 import CampaignModal from './_components/CampaignModal';
 import ConfirmModal from '@/components/shared/ConfirmModal';
 import { getCampaigns, deleteCampaign } from '@/server/actions/campaigns';
-import { Campaign, CampaignChannel } from '@/lib/validation/campaign-schema';
+import { Campaign } from '@/lib/validation/campaign-schema';
 
 export default function MarketingPage() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -21,21 +21,32 @@ export default function MarketingPage() {
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [campaignToDelete, setCampaignToDelete] = useState<string | null>(null);
 
-  const fetchCampaigns = async () => {
+  const fetchCampaigns = useCallback(async () => {
     setLoading(true);
     const res = await getCampaigns({ 
       period: filterPeriod || undefined,
       channel: filterChannel !== 'TODOS' ? filterChannel : undefined
     });
-    
     if (res.success && res.data) {
       setCampaigns(res.data);
     }
     setLoading(false);
-  };
+  }, [filterPeriod, filterChannel]);
 
   useEffect(() => {
-    fetchCampaigns();
+    let isMounted = true;
+    getCampaigns({ 
+      period: filterPeriod || undefined,
+      channel: filterChannel !== 'TODOS' ? filterChannel : undefined
+    }).then(res => {
+      if (isMounted) {
+        if (res.success && res.data) {
+          setCampaigns(res.data);
+        }
+        setLoading(false);
+      }
+    });
+    return () => { isMounted = false; };
   }, [filterPeriod, filterChannel]);
 
   // Cálculos de KPIs

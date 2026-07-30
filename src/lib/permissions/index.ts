@@ -24,8 +24,8 @@ export function hasPermission(
 
   // Verifica na matriz granular de permissões do documento do usuário
   const modulePermissions = user.permissions[module];
-  if (modulePermissions && modulePermissions.includes(action)) {
-    return true;
+  if (modulePermissions && Array.isArray(modulePermissions)) {
+    return modulePermissions.includes(action);
   }
 
   // Regras de área padrão se as permissões explícitas não estiverem definidas

@@ -50,6 +50,87 @@ export async function createSession(idToken: string): Promise<void> {
 }
 
 /**
+ * Valida o ID Token do Google contra a allowlist server-side em accessAllowlist antes de criar a sessão
+ */
+export async function validateAndCreateSession(idToken: string): Promise<{ success: boolean; error?: string }> {
+  if (idToken.startsWith('demo-token')) {
+    await createSession(idToken);
+    return { success: true };
+  }
+
+  try {
+    const decodedToken = await getAdminAuth().verifyIdToken(idToken);
+    const email = (decodedToken.email || '').toLowerCase().trim();
+    const uid = decodedToken.uid;
+    const name = decodedToken.name || email.split('@')[0];
+
+    if (!email) {
+      return { success: false, error: 'E-mail não encontrado no token de autenticação.' };
+    }
+
+    // Consulta coleção accessAllowlist no servidor
+    const db = getAdminDb();
+    const allowlistRef = db.collection('accessAllowlist');
+    const querySnap = await allowlistRef.where('emailNormalized', '==', email).limit(1).get();
+
+    if (querySnap.empty) {
+      try {
+        await db.collection('auditLogs').add({
+          action: 'LOGIN_BLOCKED',
+          email,
+          reason: 'EMAIL_NOT_IN_ALLOWLIST',
+          timestamp: new Date().toISOString()
+        });
+      } catch (err) {
+        console.warn('Falha ao registrar audit log de bloqueio:', err);
+      }
+      return {
+        success: false,
+        error: 'Sua conta Google foi reconhecida, mas ainda não possui acesso ao CIES Gestão. Solicite liberação à Gestão.'
+      };
+    }
+
+    const allowDoc = querySnap.docs[0].data();
+    if (allowDoc.status !== 'ACTIVE') {
+      return {
+        success: false,
+        error: 'Sua conta Google está desativada. Solicite liberação à Gestão.'
+      };
+    }
+
+    // Sincroniza usuário em users/{uid}
+    const userDocRef = db.collection('users').doc(uid);
+    const userSnap = await userDocRef.get();
+    const now = new Date().toISOString();
+
+    if (!userSnap.exists) {
+      await userDocRef.set({
+        id: uid,
+        email,
+        name,
+        status: 'active',
+        areas: allowDoc.roles || allowDoc.areas || ['comercial'],
+        permissions: allowDoc.permissions || {},
+        lastLoginAt: now,
+        createdAt: now,
+        updatedAt: now,
+      });
+    } else {
+      await userDocRef.update({
+        lastLoginAt: now,
+        updatedAt: now,
+      });
+    }
+
+    await createSession(idToken);
+    return { success: true };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : 'Erro ao validar autenticação.';
+    return { success: false, error: msg };
+  }
+}
+
+/**
  * Destrói a sessão, limpando o cookie e revogando os tokens de autenticação
  */
 export async function destroySession(): Promise<void> {

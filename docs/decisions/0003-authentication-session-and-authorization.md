@@ -1,25 +1,18 @@
-# ADR 0003: Autenticação, Sessão por Cookies SSR e Matriz de Autorização
+# ADR 0003: Google Auth, Allowlist Server-Side e RBAC
 
-- **Status:** **PROPOSTO**
-- **Data:** 2026-07-13
-- **Autor:** @security
+## Status
+**CONFIRMADO** (29/07/2026)
 
 ## Contexto
-O sistema CIES Gestão processa informações confidenciais (dados de faturamento e dados pessoais de alunos). A autenticação no cliente via Firebase SDK expõe tokens que podem ser vulneráveis se não forem gerenciados corretamente no Next.js App Router (SSR). A segurança deve ser aplicada tanto na API cliente quanto no servidor.
+O CIES Gestão é um sistema web interno. Ele não possui cadastro público de usuários. Todos os colaboradores acessarão o sistema utilizando suas contas Google ativas. Contudo, o simples fato de possuir uma conta Google válida não deve conceder acesso às rotas ou aos dados do sistema.
 
 ## Decisão
-Implementaremos um modelo de autenticação individual de colaboradores com **sessão SSR via cookies seguros** e autorização em duas camadas.
-
-1.  **Firebase Authentication no Cliente:** O login do usuário será efetuado via formulário no cliente (Firebase Web SDK) por e-mail e senha.
-2.  **Troca Segura de Token (Cookies SSR):** Ao efetuar o login com sucesso, o ID Token gerado no cliente será enviado via HTTPS POST para um endpoint de API (`/api/auth/session`). O endpoint usará o Firebase Admin SDK para validar o token e criar um cookie de sessão seguro (`HttpOnly`, `Secure` em produção, `SameSite=Strict`, validade padrão de 5 dias).
-3.  **Autorização em Duas Camadas:**
-    - **Client-Side (SDK Cliente):** O acesso direto ao banco do cliente será restrito pelas regras em `firestore.rules` (Security Rules). Por padrão, as regras negarão qualquer leitura ou escrita, permitindo apenas caminhos correspondentes ao ID do usuário e permissões específicas.
-    - **Server-Side (Admin SDK):** Como o Admin SDK ignora as Security Rules do banco, qualquer chamada realizada via Server Actions ou Route Handlers fará uma validação explícita de autenticação (verificação do cookie de sessão) e verificação do papel do usuário em `users/{uid}/permissions` antes de realizar a operação.
-4.  **Criação de Contas Controlada:** Não haverá rota de auto-cadastro pública. O cadastro inicial de colaboradores será feito exclusivamente por administradores autorizados.
+1. **Autenticação no Cliente:** Utilizar o provedor `GoogleAuthProvider` do Firebase Authentication no cliente via popup com fallback por redirect.
+2. **Validação Server-Side da Allowlist:** Ao receber o ID Token do Firebase no servidor (`/api/auth/session`), o Admin SDK verifica a assinatura do token, se o e-mail está verificado e se o e-mail consta na coleção `accessAllowlist` com status `'ACTIVE'`.
+3. **Bloqueio de Não Autorizados:** Caso o e-mail autenticado pelo Google não esteja na `accessAllowlist`, o servidor rejeita o login com a mensagem explicativa: *"Sua conta Google foi reconhecida, mas ainda não possui acesso ao CIES Gestão. Solicite liberação à Gestão."*
+4. **Sessão por Cookie HttpOnly:** Após a aprovação do servidor, um cookie de sessão seguro (`HttpOnly`, `Secure` em produção, `SameSite=Lax`) é configurado (`__session`).
+5. **RBAC no Servidor:** As permissões e papéis são extraídos do registro do colaborador no Firestore pelo Admin SDK em cada requisição de Server Action ou Route Handler.
 
 ## Consequências
-- **Positivas:**
-  - Máxima segurança contra ataques XSS e CSRF em páginas SSR.
-  - O servidor Next.js renderiza apenas componentes adequados ao nível de acesso do usuário de forma segura.
-- **Negativas / Riscos:**
-  - Aumenta a complexidade de gerenciamento de estado de login (troca de tokens de autenticação por cookies). Mitigaremos escrevendo helpers de sessão encapsulados e exaustivamente testados (`lib/firebase/auth-session.ts`).
+- A segurança é mantida integralmente no servidor, impedindo bypass por manipulação de estado do cliente.
+- Security Rules do Firestore no cliente aplicam a regra `deny-by-default` para usuários não cadastrados em `users/{uid}`.

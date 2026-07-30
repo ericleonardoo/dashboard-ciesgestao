@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createSession, destroySession } from '@/lib/firebase/auth-session';
+import { validateAndCreateSession, destroySession } from '@/lib/firebase/auth-session';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,8 +17,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Cria a sessão gerando o cookie
-    await createSession(idToken);
+    // Valida allowlist no servidor e cria o cookie de sessão
+    const result = await validateAndCreateSession(idToken);
+    if (!result.success) {
+      return NextResponse.json(
+        { error: result.error || 'Acesso negado.' },
+        { status: 403 }
+      );
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

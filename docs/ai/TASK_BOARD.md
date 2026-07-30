@@ -1,46 +1,25 @@
-# Task Board — CIES Gestão
+# Task Board — CIES Gestão v3.0
 
-## IN PROGRESS
-- **T-F10-1:** Auditoria de Segurança, Cobertura de Testes E2E/Rules e Release Candidate
-  - *Owner:* @devops / @qa / @security
-  - *Arquivos:* `firestore.rules`, `.firebaserc`, `firebase.json`
-  - *Status:* Pronto para iniciar a auditoria do Firebase Local Emulator e homologação.
+## Tarefas da Fase 0 (Preflight)
+- [x] **TASK-001**: Leitura integral dos documentos mestres (`AGENTS.md`, `CONTEXT.md`, `HYPER_PROMPT.md`) | Owner: @orchestrator | Status: DONE
+- [x] **TASK-002**: Execução de `git status` e criação do branch `chore/project-bootstrap` | Owner: @devops | Status: DONE
+- [x] **TASK-003**: Inventário do projeto, dependências, scripts e verificação `tsc/eslint` | Owner: @architect | Status: DONE
+- [x] **TASK-004**: Criação e atualização da estrutura de memória persistente `docs/ai/` | Owner: @orchestrator | Status: DONE
 
-## READY
-- **T-F8-1:** Módulos Secundários: Leads, Convênios, Campanhas e Planos 5W2H
-  - *Owner:* @fullstack
-  - *Arquivos:* `src/app/leads/`, `src/app/campanhas/`
-  - *Dependências:* T-F5-4
+## Tarefas da Fase 1 (Especificação)
+- [x] **TASK-010**: Criar/Atualizar `docs/specifications/product-v1.md`, `b2c-pipeline.md`, `b2b-pipeline.md` | Owner: @product | Status: DONE
+- [x] **TASK-011**: Atualizar matriz de permissões RBAC em `docs/specifications/permissions-matrix.md` | Owner: @product | Status: DONE
 
-## BACKLOG
-- Nenhum. Todos os módulos centrais da aplicação interna estão finalizados.
+## Tarefas da Fase 2 (Arquitetura e ADRs)
+- [x] **TASK-020**: Atualizar ADR 0003 em `docs/decisions/` para Google Auth + Allowlist + Cookie HttpOnly | Owner: @architect | Status: DONE
 
-## DONE
-- **T-F0-0:** Limpeza de diretórios recursivos indesejados (`Users/`)
-  - *Concluído em:* 2026-07-13
-- **T-F0-1:** Criação da base de memória persistente em `docs/ai/`
-  - *Concluído em:* 2026-07-13
-- **T-F1-1:** Criação da especificação de produto (V1 Spec, Matrix, Journeys, Criteria)
-  - *Concluído em:* 2026-07-13
-- **T-F2-1:** Elaboração das decisões arquiteturais (ADRs 0001 a 0006) e Modelo de Dados
-  - *Concluído em:* 2026-07-13
-- **T-F3-1:** Bootstrap Técnico do Next.js e Firebase Local Emulator Suite
-  - *Concluído em:* 2026-07-13
-- **T-F4-1:** Autenticação por e-mail/senha e Cookie de Sessão SSR
-  - *Concluído em:* 2026-07-13
-- **T-F4-2:** Matriz de Permissões (RBAC) e Segurança de Operações (Rules/Servidor)
-  - *Concluído em:* 2026-07-13
-- **T-F5-1:** Parser XLSX/CSV de matrículas com normalização
-  - *Concluído em:* 2026-07-14
-- **T-F5-2:** Deduplicação por Chave HMAC (CPF + Curso + Inst + Mês)
-  - *Concluído em:* 2026-07-14
-- **T-F5-3:** Wizard de Importação, Staging e Confirmação Transacional
-  - *Concluído em:* 2026-07-14
-- **T-F6-1:** Painel de KPIs de Vendas (Total vs. Válido) e Filtros
-  - *Concluído em:* 2026-07-14
-- **T-F7-1:** Módulo de Relacionamento e Fila de Boas-Vindas Automática
-  - *Concluído em:* 2026-07-14
-- **T-F5-4:** Tabela Central de Matrículas e Edição de Vendedor/Valor com Auditoria
-  - *Concluído em:* 2026-07-14
-- **T-F9-1:** Ajustes UX e Acessibilidade (contraste, teclado, skeletons, erros)
-  - *Concluído em:* 2026-07-14
+## Tarefas da Fase 3 (Bootstrap & Qualidade)
+- [x] **TASK-030**: Corrigir todos os erros de lint do ESLint (zerar 24 avisos/erros) | Owner: @fullstack | Status: DONE
+- [x] **TASK-031**: Executar suite de 62 testes unitários (`npm run test`) e garantir 100% verde | Owner: @qa | Status: DONE
+- [x] **TASK-032**: Executar build completo de produção Next.js 16.2 (`npm run build`) | Owner: @devops | Status: DONE
+
+## Tarefas da Fase 4 (Google Auth, Sessão & RBAC)
+- [x] **TASK-040**: Implementar `validateAndCreateSession` em `auth-session.ts` validando `accessAllowlist` no servidor via Admin SDK | Owner: @auth-security | Status: DONE
+- [x] **TASK-041**: Atualizar endpoint `/api/auth/session/route.ts` para negar requisições fora da allowlist com HTTP 403 | Owner: @auth-security | Status: DONE
+- [x] **TASK-042**: Adicionar botão "Entrar com Google" no cliente em `src/app/(auth)/login/page.tsx` com tratamento de popup/redirect e aviso de permissão | Owner: @ux | Status: DONE
+- [x] **TASK-043**: Adicionar testes unitários para a regra de isolamento de carteira do consultor em `auth.test.ts` | Owner: @qa | Status: DONE

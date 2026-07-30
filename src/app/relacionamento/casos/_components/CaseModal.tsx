@@ -11,40 +11,37 @@ interface CaseModalProps {
 }
 
 export default function CaseModal({ isOpen, onClose, initialData, onSave }: CaseModalProps) {
-  const [formData, setFormData] = useState({
-    studentName: '',
-    studentCpf: '',
-    category: 'acesso' as CaseCategory,
-    status: 'aberto' as CaseStatus,
-    description: '',
-  });
+  const getInitialState = () => {
+    if (initialData) {
+      return {
+        studentName: initialData.studentName,
+        studentCpf: initialData.studentCpf,
+        category: initialData.category,
+        status: initialData.status,
+        description: initialData.description,
+      };
+    }
+    return {
+      studentName: '',
+      studentCpf: '',
+      category: 'acesso' as CaseCategory,
+      status: 'aberto' as CaseStatus,
+      description: '',
+    };
+  };
 
+  const [formData, setFormData] = useState(getInitialState);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      // eslint-disable-next-line react-hooks/exhaustive-deps
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFormData(getInitialState());
       setErrors({});
-      if (initialData) {
-        setFormData({
-          studentName: initialData.studentName,
-          studentCpf: initialData.studentCpf,
-          category: initialData.category,
-          status: initialData.status,
-          description: initialData.description,
-        });
-      } else {
-        setFormData({
-          studentName: '',
-          studentCpf: '',
-          category: 'acesso',
-          status: 'aberto',
-          description: '',
-        });
-      }
     }
-  }, [isOpen, initialData]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, initialData?.id]);
 
   if (!isOpen) return null;
 
@@ -78,9 +75,10 @@ export default function CaseModal({ isOpen, onClose, initialData, onSave }: Case
         onClose();
       }
     } catch (err: unknown) {
-      if (err && typeof err === 'object' && 'errors' in err) {
+      if (err && typeof err === 'object' && 'errors' in err && Array.isArray((err as { errors: unknown[] }).errors)) {
         const newErrors: Record<string, string> = {};
-        (err as Record<string, any[]>).errors.forEach((error) => {
+        const zErrors = (err as { errors: Array<{ path?: Array<string | number>; message: string }> }).errors;
+        zErrors.forEach((error) => {
           if (error.path && error.path[0]) {
             newErrors[error.path[0].toString()] = error.message;
           }

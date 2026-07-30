@@ -1,1361 +1,1207 @@
-# CONTEXT.md — Sistema Interno de Gestão da CIES (Firebase Edition)
+# CONTEXT.md — CIES Gestão
 
-> Contexto de produto e domínio para humanos e agentes de IA.
-> Este documento registra o que já foi confirmado, o que está proposto e o que ainda precisa ser decidido.
+> Fonte de verdade de produto, negócio, escopo e regras do sistema.
+>
+> Atualização consolidada: **29 de julho de 2026**.
 
-## 1. Identificação do projeto
+## 1. Identificação
 
-**Nome de trabalho:** CIES Gestão  
-**Tipo:** Sistema web interno de gestão, indicadores e acompanhamento estratégico  
-**Status atual:** Preparação do ambiente e especificação pré-desenvolvimento  
-**Responsável operacional e líder de desenvolvimento:** Eric  
-**Stakeholder principal:** Elen, Gestão/Coordenação/Comercial da CIES  
-**Equipe de desenvolvimento:** Eric e seu primo, trabalhando de forma colaborativa pelo GitHub  
-**Prazo inicialmente comunicado para a primeira versão funcional:** aproximadamente três semanas, sujeito a validação do escopo técnico
-
----
+**Produto:** CIES Gestão  
+**Empresa:** CIES — polo de ensino superior EAD e semipresencial  
+**Tipo:** Sistema web interno de gestão, CRM comercial, matrículas e inteligência operacional  
+**Product Owner operacional:** Eric  
+**Stakeholder principal:** Elen  
+**Desenvolvimento:** Eric e seu primo, com GitHub e Google Antigravity  
+**Frontend/aplicação:** Next.js  
+**Backend:** Firebase  
+**Banco:** Cloud Firestore  
+**Autenticação:** Firebase Authentication com login Google  
+**Hospedagem-alvo:** Vercel  
+**Idioma da interface:** Português do Brasil
 
 ## 2. Resumo executivo
 
-A CIES controla atualmente suas matrículas por uma planilha no Google Sheets e utiliza sistemas próprios das faculdades parceiras para processos acadêmicos e administrativos oficiais.
+A CIES usa uma planilha Google Sheets para controlar matrículas e utiliza os sistemas oficiais das faculdades para processos acadêmicos e administrativos. Também realiza atendimento e vendas pelo WhatsApp, prospecção de pessoas físicas, busca ativa de empresas e criação de convênios.
 
-O novo sistema não substituirá a planilha, os sistemas das faculdades, o WhatsApp ou todas as rotinas manuais. Ele funcionará como uma camada interna de gestão e inteligência, permitindo:
+O CIES Gestão será uma camada interna de gestão, sem substituir obrigatoriamente os processos existentes. Ele deve integrar em uma visão única:
 
-- importar periodicamente a planilha de matrículas;
-- organizar e validar os registros;
-- editar manualmente dados importados conforme permissões;
-- acompanhar metas de matrículas e faturamento;
-- analisar resultados por colaborador, curso, instituição e período;
-- identificar pendências de liberação e boas-vindas;
-- acompanhar leads, convênios, campanhas e planos de ação;
-- encontrar gargalos semanais, quinzenais e mensais;
-- apoiar decisões da Gestão com dados confiáveis.
+- matrículas;
+- importações;
+- funil B2C;
+- funil B2B;
+- empresas e convênios;
+- atividades comerciais;
+- metas;
+- desempenho da equipe;
+- campanhas;
+- relacionamento;
+- planos 5W2H;
+- relatórios.
 
-A visão central é:
+A pergunta central do produto é:
 
-> O sistema deve mostrar onde a CIES está, o que falta para alcançar suas metas, onde está o gargalo e qual ação precisa ser tomada.
+> Onde a CIES está, quanto falta para a meta, onde está o gargalo e qual ação precisa ser tomada?
 
----
+## 3. Contexto organizacional
 
-## 3. Contexto da CIES
+### Instituições no escopo inicial
 
-A CIES é um polo/empresa que atende alunos e trabalha com instituições de ensino superior parceiras.
+- UniFecaf;
+- UniFacvest;
+- FSL — Faculdade São Luiz.
 
-### Instituições atuais no escopo inicial
+### Modalidades
 
-- UniFecaf
-- UniFacvest
-- FSL — Faculdade São Luiz
+- EAD;
+- semipresencial.
 
-### Fora do foco inicial
-
-A CIES também trabalha ou trabalhou com EJA, mas esse segmento está temporariamente fora do MVP. A arquitetura não deve bloquear uma inclusão futura, mas nenhuma funcionalidade específica de EJA deve atrasar a primeira versão.
+EJA não é fluxo principal do MVP, mas a arquitetura não deve bloquear inclusão futura.
 
 ### Áreas internas
 
-- Gestão
-- Relacionamento com o Aluno
-- Comercial
-- Administrativo
-- Marketing
+- Gestão;
+- Relacionamento com o Aluno;
+- Comercial;
+- Administrativo;
+- Marketing.
 
-A empresa possui equipe pequena, e algumas pessoas atuam em mais de uma área. O sistema não deve assumir uma relação rígida de “um usuário = uma única área”.
+Uma pessoa pode atuar em mais de uma área. Permissões não devem assumir “um usuário = um único papel”.
 
----
+### Pessoas conhecidas
 
-## 4. Equipe conhecida
-
-| Pessoa | Atuação atual conhecida |
+| Pessoa | Atuação |
 |---|---|
 | Elen | Gestão, Coordenação e Comercial |
-| Eric | Relacionamento com o Aluno e desenvolvimento do sistema |
-| Nayara | Relacionamento com o Aluno |
+| Eric | Relacionamento e desenvolvimento |
+| Nayara | Relacionamento |
 | Bia | Administrativo, Marketing e Comercial |
-| Ninha | Consultora Educacional e Comercial |
+| Ninha | Consultoria Educacional e Comercial |
+| 3 consultores externos | Prospecção ativa B2C e B2B |
 
-Todos os colaboradores deverão ter acesso ao sistema. O conjunto exato de permissões por módulo ainda deverá ser validado com a Gestão.
+Os nomes dos três consultores externos ainda serão cadastrados pela Gestão.
 
-### E-mails corporativos
+## 4. Problema atual
 
-Existe a proposta de criar e-mails individuais no domínio da empresa, por exemplo:
+Os dados ficam espalhados em:
 
-```text
-eric.carvalho@ciesmg.com.br
-elen.sena@ciesmg.com.br
-```
-
-**Status:** PROPOSTO, ainda não confirmado como requisito de autenticação.
-
-O sistema deve permitir autenticação individual independentemente de a criação desses e-mails ocorrer antes ou depois do MVP.
-
----
-
-## 5. Problema atual
-
-A operação produz dados importantes, mas eles ficam distribuídos entre:
-
-- planilha de matrículas no Google Sheets;
+- Google Sheets;
 - sistemas oficiais das faculdades;
 - WhatsApp;
-- agendas e anotações manuais;
-- conhecimento das pessoas;
-- análises realizadas manualmente pela Gestão.
+- agendas;
+- controles manuais;
+- conhecimento da equipe;
+- análises feitas manualmente.
 
-Isso dificulta responder rapidamente:
+Isso dificulta responder:
 
-- quantas matrículas foram feitas no mês;
+- quantas matrículas foram feitas;
 - quanto falta para a meta;
-- qual foi o faturamento;
-- qual colaborador, curso ou instituição performou melhor;
-- quantas matrículas já foram liberadas;
-- quais alunos ainda não receberam boas-vindas;
-- se o gargalo está na captação, venda, liberação, atendimento ou acompanhamento;
-- quais ações precisam ser priorizadas.
+- quanto foi faturado;
+- qual consultor converte mais;
+- quais origens geram matrículas;
+- quantas empresas foram prospectadas;
+- quantas reuniões e propostas ocorreram;
+- quais convênios geram resultado;
+- quais follow-ups estão vencidos;
+- quais matrículas não subiram;
+- quais boas-vindas estão pendentes;
+- onde existe gargalo;
+- qual ação precisa ser priorizada.
 
----
+## 5. Objetivos
 
-## 6. Objetivo do produto
+### Objetivo principal
 
-Criar um sistema interno simples, confiável e intuitivo para centralizar a visão gerencial da CIES sem obrigar a equipe a abandonar processos que já funcionam.
+Criar uma operação previsível, visual e simples para captar, acompanhar e converter pessoas e empresas em matrículas, ao mesmo tempo em que a Gestão acompanha metas, faturamento e gargalos.
 
-O sistema deverá:
+### Objetivos específicos
 
-1. Receber a planilha atual de matrículas.
-2. Validar e importar seus registros.
-3. Permitir ajustes manuais posteriores.
-4. Transformar os dados em indicadores e alertas.
-5. Oferecer visões adequadas para cada área.
-6. Controlar acesso e edição por permissões.
-7. Registrar ações críticas e evitar exclusões acidentais.
-8. Permitir análise por mês e outros períodos selecionados.
+1. Manter a planilha atual como fonte operacional de matrículas.
+2. Importar dados de forma periódica e repetível.
+3. Permitir edição manual conforme permissão.
+4. Organizar o funil B2C.
+5. Organizar a prospecção B2B.
+6. Medir atividades relevantes dos consultores.
+7. Ligar empresas, parcerias, leads e matrículas.
+8. Centralizar metas e indicadores.
+9. Gerar alertas acionáveis.
+10. Preservar simplicidade e segurança.
 
----
+## 6. Não objetivos
 
-## 7. Não objetivos
+O sistema não deve no MVP:
 
-O sistema **não** deve, no MVP:
-
-- substituir os sistemas oficiais da UniFecaf, UniFacvest ou FSL;
-- copiar módulos acadêmicos completos das faculdades;
-- controlar avaliações, provas, documentos, AVA, boletos ou atividades que obrigatoriamente ficam no sistema da faculdade;
+- substituir os sistemas oficiais das faculdades;
+- copiar módulos acadêmicos completos;
+- controlar provas, AVA, documentos e boletos oficiais;
 - substituir o WhatsApp;
-- substituir a agenda manual de demandas cotidianas;
-- obrigar o Relacionamento a registrar cada atendimento comum;
-- importar automaticamente todos os alunos históricos dos sistemas das faculdades;
-- criar uma réplica completa de ERP educacional;
+- obrigar registro de todo atendimento comum;
+- substituir completamente a planilha;
+- virar ERP educacional completo;
+- integrar com terceiros sem API oficial e autorização;
 - incluir EJA como fluxo principal;
-- integrar-se a sistemas de terceiros sem acesso oficial e autorização.
+- conceder acesso público;
+- permitir que qualquer conta Google entre;
+- criar automações fictícias.
 
-O critério para inclusão de uma informação é:
+## 7. Princípios de produto
 
-> Ela ajuda a medir resultado, identificar gargalo, acompanhar meta, melhorar atendimento ou orientar uma decisão de gestão?
+- Simples antes de completo.
+- Ação antes de decoração.
+- Informação centralizada sem burocracia.
+- Fonte e fórmula visíveis.
+- Desktop-first com mobile utilizável.
+- Segurança aplicada no servidor.
+- Dados pessoais somente quando necessários.
+- Nenhum KPI sem definição.
+- Nenhuma meta sem período e regra.
+- Nenhuma oportunidade aberta sem próximo passo.
 
----
+## 8. Processo operacional desejado
 
-## 8. Processo atual e processo futuro
-
-### 8.1 Processo atual
-
-```text
-Atendimento / venda / matrícula
-        ↓
-Preenchimento da planilha no Google Sheets
-        ↓
-Uso dos sistemas oficiais das faculdades
-        ↓
-Acompanhamento manual de demandas
-        ↓
-Análise manual dos resultados
-```
-
-### 8.2 Processo futuro desejado
+### Matrículas
 
 ```text
-Atendimento / venda / matrícula
-        ↓
-Planilha continua sendo preenchida
-        ↓
-Importação periódica no CIES Gestão
-        ↓
-Validação, normalização e revisão
-        ↓
-Dashboards, KPIs, alertas e relatórios
-        ↓
-Identificação de gargalos
-        ↓
-Plano de ação 5W2H
-        ↓
-Nova medição de resultados
+Venda/matrícula
+→ preenchimento da planilha
+→ importação periódica
+→ validação e revisão
+→ matrícula no CIES Gestão
+→ dashboard e acompanhamento
+→ Subiu?
+→ boas-vindas
+→ indicadores atualizados
 ```
 
-A frequência de importação/análise pode ser semanal, quinzenal ou mensal. A Gestão deverá poder filtrar o período. A conversa inicial indicou uso quinzenal como rotina importante.
+### B2C
 
----
+```text
+Lead
+→ primeiro contato
+→ atendimento
+→ qualificação
+→ proposta
+→ negociação/follow-up
+→ matrícula ou perda
+→ vínculo com matrícula
+→ resultado por origem e consultor
+```
 
-## 9. Fonte de dados principal: planilha de matrículas
+### B2B
 
-A planilha histórica possui as colunas:
+```text
+Empresa identificada
+→ prospecção
+→ contato
+→ decisor
+→ reunião
+→ proposta
+→ negociação
+→ parceria
+→ divulgação
+→ leads
+→ matrículas
+→ receita da parceria
+```
 
-| Coluna | Significado | Regra atual |
-|---|---|---|
-| Aluno | Nome do aluno | Obrigatória para uso normal |
-| Valor | Valor da matrícula/venda | Formato brasileiro, exemplo `R$ 199,90` |
-| Tipo | Tipo da matrícula | Opcional; normalmente não preenchido |
-| Inst. | Instituição | UniFecaf, UniFacvest ou FSL |
-| Vendedor | Pessoa que fechou a matrícula | Usado em desempenho por colaborador |
-| BVS? | Boas-vindas enviadas | `SIM`, `NÃO` ou vazio |
-| CPF | CPF do aluno | Identifica o aluno, não a matrícula isolada |
-| Telefone | Telefone do aluno | Usado em contato |
-| Redirect | Atalho para WhatsApp | Direciona ao WhatsApp do aluno |
-| Subiu? | Matrícula liberada pela faculdade | `SIM`, `NÃO` ou vazio |
-| Curso | Curso da matrícula | Copiado diretamente do sistema da faculdade |
-| Pagamento | Forma de pagamento | Pix, boleto ou cartão |
+### Gestão
 
-### 9.1 Mês de referência
+```text
+Indicador
+→ comparação com meta
+→ diagnóstico do gargalo
+→ plano 5W2H
+→ responsável e prazo
+→ execução
+→ nova medição
+```
 
-A planilha não possui data exata de matrícula como requisito atual. Para a gestão pretendida, basta associar o lote a um **mês de referência**, por exemplo `junho/2026`.
+## 9. Usuários e autenticação
 
-**Regra confirmada:** data exata de matrícula não é necessária no MVP.
+### Decisão confirmada em 29/07/2026
 
-A interface pode permitir identificar o lote como mensal, primeira quinzena ou segunda quinzena, mas a necessidade dessa subdivisão deve ser confirmada antes de torná-la obrigatória.
+A V1 usará **login com Google** por Firebase Authentication.
 
----
+Não haverá cadastro público.
 
-## 10. Importação da planilha
+### Fluxo de acesso
 
-### 10.1 Objetivo
+1. Gestão autoriza previamente o e-mail.
+2. Colaborador escolhe a conta Google.
+3. Firebase autentica.
+4. O servidor valida token, e-mail verificado, allowlist, status e permissões.
+5. O servidor cria cookie de sessão.
+6. Usuário é direcionado à sua área.
+7. Contas não autorizadas permanecem sem acesso.
 
-Importar o modelo histórico sem exigir que a equipe reformule a planilha.
+### Allowlist
 
-### 10.2 Fluxo esperado
+A allowlist deve conter:
 
-1. Usuário autorizado seleciona o arquivo.
-2. Informa o mês de referência.
-3. Sistema valida cabeçalhos.
-4. Sistema normaliza os valores.
-5. Sistema apresenta uma prévia.
-6. Sistema identifica erros, avisos e possíveis duplicidades.
-7. Usuário decide como tratar conflitos.
-8. Sistema confirma a importação.
-9. Dashboard é recalculado.
-10. Lote fica registrado no histórico.
+- e-mail normalizado;
+- nome;
+- status;
+- áreas;
+- conjunto de permissões;
+- data de liberação;
+- liberado por;
+- observação administrativa opcional.
 
-### 10.3 Informações do lote
+A implementação pode armazenar chave derivada/HMAC do e-mail para busca server-side. O documento não deve ser legível pelo cliente.
 
-Cada importação deverá registrar, no mínimo:
+### Sessão
 
-- identificador do lote;
-- mês de referência;
-- nome original do arquivo;
-- usuário responsável;
-- data/hora da importação;
-- total de linhas lidas;
-- total criado;
-- total atualizado;
-- total ignorado;
-- total com erro;
-- resultado e status do lote.
+- cookie `HttpOnly`;
+- `Secure` em produção;
+- `SameSite`;
+- expiração configurável;
+- verificação de revogação em ações sensíveis;
+- logout remove cookie;
+- acesso server-side obrigatório.
 
-### 10.4 Validação de cabeçalhos
+### Tela de login
 
-O sistema deve reconhecer exatamente o modelo esperado e avisar quando houver:
+Deve conter:
 
-- coluna obrigatória ausente;
-- nome inesperado;
-- arquivo sem dados;
-- formato não suportado;
-- múltiplas abas ambíguas;
-- células incompatíveis.
+- marca CIES;
+- mensagem curta;
+- botão “Entrar com Google”;
+- estado de carregamento;
+- erro claro;
+- aviso de acesso restrito;
+- suporte visual profissional;
+- sem formulário de cadastro.
 
-A estratégia de tolerância a pequenas variações de cabeçalho ainda deverá ser definida. Não corrigir por adivinhação.
+## 10. Áreas e permissões
 
-### 10.5 Dados editáveis
+### Gestão
 
-**Regra confirmada:** todos os dados importados poderão ser alterados manualmente depois, respeitando permissões e proteção de campos críticos.
+- visão total;
+- metas;
+- relatórios;
+- usuários;
+- allowlist;
+- permissões;
+- importações;
+- campos protegidos;
+- auditoria;
+- ações destrutivas controladas.
 
-Alterações relevantes devem ter auditoria.
+### Relacionamento
 
----
+- visualizar e editar qualquer matrícula;
+- atualizar Subiu e BVS;
+- abrir WhatsApp;
+- acompanhar pendências;
+- não alterar Vendedor;
+- não alterar Valor sem permissão elevada.
 
-## 11. Modelo de aluno e matrícula
+### Administrativo
 
-### 11.1 Regra central
+- importar;
+- revisar;
+- corrigir campos autorizados;
+- resolver inconsistências;
+- alterar Vendedor apenas com permissão confirmada.
+
+### Comercial interno
+
+- leads;
+- empresas;
+- parcerias;
+- atividades;
+- metas;
+- relatórios comerciais;
+- visão de equipe conforme permissão.
+
+### Consultor externo
+
+- própria carteira de leads;
+- próprias empresas;
+- próprias atividades;
+- reuniões e propostas;
+- própria meta;
+- próprio desempenho;
+- criação de contatos;
+- atualização de estágio;
+- sem acesso administrativo;
+- sem alteração de Valor, Vendedor histórico, permissões ou importações.
+
+### Marketing
+
+- campanhas;
+- origens;
+- resultados agregados;
+- leads vinculados conforme necessidade;
+- sem edição de dados críticos por padrão.
+
+## 11. Módulos e rotas
+
+```text
+/login
+/dashboard
+/minha-area
+/comercial
+/leads
+/empresas
+/convenios
+/atividades
+/metas
+/matriculas
+/importacoes
+/relacionamento
+/campanhas
+/planos-acao
+/relatorios
+/colaboradores
+/configuracoes
+/auditoria
+```
+
+### Navegação recomendada
+
+**Visão**
+- Dashboard
+- Minha Área
+
+**Comercial**
+- Leads
+- Empresas
+- Convênios
+- Atividades
+- Metas
+
+**Operação**
+- Matrículas
+- Importações
+- Relacionamento
+
+**Estratégia**
+- Campanhas
+- Planos de Ação
+- Relatórios
+
+**Administração**
+- Colaboradores
+- Configurações
+- Auditoria
+
+Itens devem aparecer conforme permissões.
+
+## 12. Planilha de matrículas
+
+Colunas confirmadas:
+
+| Coluna | Regra |
+|---|---|
+| Aluno | Nome do aluno |
+| Valor | Valor em formato brasileiro |
+| Tipo | Opcional |
+| Inst. | UniFecaf, UniFacvest ou FSL |
+| Vendedor | Quem fechou |
+| BVS? | SIM, NÃO ou vazio |
+| CPF | Identifica aluno |
+| Telefone | Contato |
+| Redirect | Atalho de WhatsApp |
+| Subiu? | SIM, NÃO ou vazio |
+| Curso | Nome oficial |
+| Pagamento | Pix, Boleto ou Cartão |
+
+### Mês de referência
+
+Data exata não é requisito do MVP. Cada lote deve possuir `referenceMonth` no formato `YYYY-MM`.
+
+### Importação
+
+Fluxo:
+
+1. upload;
+2. mês;
+3. validação de cabeçalho;
+4. normalização;
+5. prévia;
+6. erros e avisos;
+7. duplicidades;
+8. decisão;
+9. confirmação;
+10. atualização de dashboard;
+11. histórico.
+
+### Regras
+
+- não alterar arquivo original;
+- não descartar linha silenciosamente;
+- permitir edição posterior;
+- registrar responsável;
+- registrar totais;
+- reimportação deve ser segura;
+- reversão deve ser controlada;
+- arquivo deve ser descartado após parsing por padrão.
+
+## 13. Aluno, matrícula e duplicidade
 
 Um aluno pode possuir várias matrículas.
 
-```text
-Aluno 1
- ├── Matrícula A — Administração / UniFecaf
- └── Matrícula B — Pedagogia / UniFecaf
-```
+CPF não é matrícula.
 
-O CPF identifica o aluno, mas não pode ser usado sozinho para definir uma matrícula única.
-
-### 11.2 Regra de duplicidade confirmada
-
-O sistema deve permitir:
-
-- mesmo CPF com curso diferente;
-- mesmo CPF com instituição diferente, caso exista uma matrícula real;
-- múltiplas matrículas legítimas em campanhas específicas.
-
-O sistema deve sinalizar como duplicidade ou atualização quando houver, no mínimo:
+Chave mínima de duplicidade:
 
 ```text
-CPF normalizado + Curso normalizado + Instituição + Mês de referência
+CPF normalizado
++ curso normalizado
++ instituição
++ mês de referência
 ```
 
-Exemplo permitido:
+Permitido:
 
-| CPF | Curso | Instituição | Mês |
-|---|---|---|---|
-| 123 | Administração | UniFecaf | 2026-06 |
-| 123 | Pedagogia | UniFecaf | 2026-06 |
+- mesmo CPF, curso diferente;
+- mesmo CPF, instituição diferente quando legítimo.
 
-Exemplo de conflito:
+Conflito:
 
-| CPF | Curso | Instituição | Mês |
-|---|---|---|---|
-| 123 | Administração | UniFecaf | 2026-06 |
-| 123 | Administração | UniFecaf | 2026-06 |
+- mesmo CPF, curso, instituição e período.
 
-A tela de revisão deve oferecer opções controladas, como:
+Tratamentos:
 
-- ignorar registro duplicado;
-- atualizar registro existente;
-- revisar/editar antes de confirmar;
-- importar mesmo assim, somente se a permissão e a justificativa permitirem.
+- ignorar;
+- atualizar;
+- revisar;
+- importar com justificativa e permissão elevada.
 
-Nenhuma linha deve desaparecer silenciosamente.
+## 14. BVS e Subiu
 
----
-
-## 12. Estados de BVS e Subiu
-
-### 12.1 BVS?
-
-Significa **Boas-vindas**. A equipe envia uma mensagem de boas-vindas depois que a matrícula é liberada no sistema da faculdade.
-
-Valores reais:
-
-- SIM
-- NÃO
-- vazio / não informado
-
-### 12.2 Subiu?
-
-Indica se a matrícula foi liberada no sistema da faculdade.
-
-Valores reais:
-
-- SIM
-- NÃO
-- vazio / não informado
-
-### 12.3 Regra automática confirmada
-
-Se:
+Tri-state:
 
 ```text
-Subiu? = SIM
-BVS? = NÃO ou vazio
+YES
+NO
+UNKNOWN
 ```
 
-então a matrícula deve aparecer automaticamente em **Boas-vindas pendentes**.
+Interface:
 
-Ao marcar BVS como SIM, a pendência deve desaparecer e os indicadores devem ser atualizados.
+```text
+SIM
+NÃO
+NÃO INFORMADO
+```
 
-Vazio não é igual a NÃO. O sistema deve preservar os três estados.
+Regra:
 
----
+```text
+releaseStatus = YES
+AND welcomeStatus != YES
+→ boas-vindas pendentes
+```
 
-## 13. Formas de pagamento e valores
+Ao marcar BVS como SIM, a pendência desaparece e os KPIs são recalculados.
 
-### Pagamentos iniciais
+## 15. Valores e faturamento
 
-- Pix
-- Boleto
-- Cartão
+- entrada `R$ 199,90`;
+- persistência em centavos inteiros;
+- formatação pt-BR;
+- Valor protegido;
+- auditoria de alteração.
 
-### Valores
+Indicadores:
 
-- Entrada no formato brasileiro, por exemplo `R$ 199,90`.
-- Armazenamento deve evitar erro de ponto flutuante.
-- Campo Valor é sensível e deve ser mais protegido.
-
-### Indicadores confirmados
-
-O dashboard deve mostrar:
-
-1. **Faturamento total da planilha** — soma de todos os registros considerados no lote/período.
-2. **Faturamento válido** — soma apenas das matrículas classificadas como válidas segundo regra de negócio central.
-
-A definição exata de matrícula válida e o tratamento de canceladas, arquivadas, duplicadas e inválidas ainda precisam ser formalizados com a Gestão.
-
----
-
-## 14. Vendedor e desempenho
-
-A coluna `Vendedor` indica quem fechou a matrícula.
-
-### Regras confirmadas
-
-- O vendedor poderá ser vinculado ao usuário/colaborador correspondente.
-- Somente Gestão/Admin pode alterar Vendedor depois da importação.
-- O sistema deverá permitir análise por vendedor.
-- O Relacionamento também pode fechar vendas; essas vendas devem continuar sendo reconhecidas.
-
-### Pendência de modelagem
-
-Definir como tratar:
-
-- variações de nome na planilha;
-- vendedor que ainda não possui usuário;
-- colaborador desativado;
-- apelidos;
-- vendas compartilhadas.
-
-Proposta: tabela de aliases do vendedor, com revisão humana para nomes desconhecidos.
-
----
-
-## 15. Usuários, áreas e permissões
-
-### 15.1 Princípio
-
-Permissões devem ser flexíveis por módulo e ação, pois colaboradores atuam em múltiplas áreas.
-
-Exemplos de ações:
-
-- visualizar;
-- criar;
-- editar;
-- arquivar;
-- invalidar;
-- restaurar;
-- importar;
-- exportar;
-- gerenciar permissões;
-- alterar campo protegido.
-
-### 15.2 Regras confirmadas
-
-#### Gestão
-
-- Visualiza e administra tudo.
-- Pode realizar ações críticas.
-- Deve receber pop-ups/confirmações antes de ações destrutivas ou sensíveis.
-
-#### Relacionamento com o Aluno
-
-- Qualquer pessoa do Relacionamento pode editar qualquer matrícula.
-- Pode atualizar BVS e Subiu.
-- Pode acessar os dados necessários ao atendimento.
-- Não pode alterar Vendedor.
-- Valor deve permanecer protegido.
-
-#### Administrativo
-
-- Poderá importar planilhas e revisar matrículas.
-- Pode alterar Vendedor conforme regra confirmada Gestão/Admin.
-- Outras permissões precisam ser refinadas.
-
-#### Comercial
-
-- Deve trabalhar com vendas, leads, convênios e desempenho.
-- Permissões exatas ainda precisam de aprovação.
-
-#### Marketing
-
-- Deve acompanhar campanhas, origens, leads e resultados.
-- Permissões exatas ainda precisam de aprovação.
-
-### 15.3 Visibilidade entre áreas
-
-Existe a proposta de que colaboradores possam visualizar dados de outras áreas, mas editar apenas aquilo permitido para sua função.
-
-**Status:** PROPOSTO; precisa ser validado com Elen.
-
-### 15.4 Exclusão
-
-Preferência já discutida:
-
-- arquivar;
-- cancelar;
-- marcar como inválido;
-- marcar como duplicado;
-- restaurar;
-- excluir fisicamente apenas em casos restritos.
-
-A política final de retenção e exclusão precisa ser aprovada.
-
----
-
-## 16. Módulos e páginas planejados
-
-### 16.1 Login e autenticação
-
-Objetivo:
-
-- acesso individual;
-- identificação das ações;
-- aplicação de permissões;
-- futura compatibilidade com e-mail corporativo.
-
-### 16.2 Dashboard Geral
-
-Público principal: Gestão.
-
-Deve apresentar, por período selecionado:
-
-- meta de matrículas;
-- matrículas realizadas;
-- percentual atingido;
-- matrículas faltantes;
-- meta de faturamento;
 - faturamento total;
-- faturamento válido;
-- desempenho por vendedor;
-- desempenho por instituição;
-- cursos com maior volume;
-- formas de pagamento;
-- matrículas liberadas;
-- matrículas pendentes de liberação;
-- BVS enviadas;
-- BVS pendentes;
-- alertas e gargalos.
+- faturamento válido.
 
-### 16.3 Minha Área
+A definição oficial de matrícula válida continua PENDENTE da Gestão. Até aprovação, o sistema deve centralizar uma política configurável e marcar o default como PROPOSTO.
 
-Painel personalizado por usuário/permissões.
+## 16. Leads B2C
 
-Exemplos:
+### Campos
 
-- Relacionamento: BVS pendentes, matrículas que não subiram e indicadores do setor.
-- Comercial: leads, vendas, conversão, convênios e metas.
-- Administrativo: importações, inconsistências e revisão.
-- Marketing: campanhas, canais, leads e conversão.
-- Gestão: visão geral, metas e planos de ação.
+```text
+id
+name
+phone
+phoneNormalized
+city
+courseInterest
+modality
+institutionInterest
+source
+ownerId
+status
+lastContactAt
+nextContactAt
+potentialAmountCents?
+lossReason?
+notes?
+partnershipId?
+campaignId?
+convertedEnrollmentId?
+createdAt
+createdBy
+updatedAt
+updatedBy
+```
 
-### 16.4 Importações
+### Status
 
-- upload de planilha;
-- mês de referência;
-- validação de cabeçalhos;
-- prévia;
-- normalização;
-- revisão de conflitos;
-- confirmação;
-- histórico de lotes;
-- reversão controlada.
+```text
+NEW
+FIRST_CONTACT
+IN_SERVICE
+QUALIFIED
+PROPOSAL_SENT
+NEGOTIATION
+FOLLOW_UP
+ENROLLED
+LOST
+NO_RESPONSE
+```
 
-### 16.5 Matrículas
+Rótulos em português conforme o funil definido.
 
-- tabela central;
-- pesquisa por aluno ou CPF;
-- filtros por mês, instituição, vendedor, curso, pagamento, BVS e Subiu;
-- edição manual conforme permissão;
-- acesso ao WhatsApp por Redirect;
-- arquivar, invalidar e restaurar;
-- visualização do histórico de alterações em campos críticos.
+### Origens
 
-### 16.6 Metas e KPIs
+- Instagram;
+- Facebook;
+- Google;
+- WhatsApp;
+- Indicação;
+- Evento;
+- Ação externa;
+- Empresa parceira;
+- Orgânico;
+- Outros.
 
-- metas de matrículas;
-- metas de faturamento;
-- metas operacionais;
-- resultados por período;
-- semáforo;
-- evolução;
-- comparações.
+### Regras
 
-A regra final do semáforo ainda precisa ser definida pela Gestão.
+- responsável obrigatório;
+- próximo contato visível;
+- perda exige motivo;
+- matrícula deve poder ser vinculada;
+- parceria e campanha devem ser preservadas como origem;
+- follow-up vencido gera alerta;
+- redistribuição gera auditoria.
 
-### 16.7 Colaboradores e permissões
+## 17. Empresas e prospecção B2B
 
-- usuários;
-- áreas;
-- papéis múltiplos;
-- permissões por módulo/ação;
-- status ativo/inativo;
-- vínculo com nomes de vendedor na planilha;
-- último acesso e auditoria, se aprovado.
+### Empresa
 
-### 16.8 Leads
+```text
+id
+name
+legalName?
+cnpjNormalized?
+cnpjFingerprint?
+segment
+city
+neighborhood?
+employeeCountEstimate?
+source
+ownerId
+status
+lastContactAt?
+nextStep
+nextStepAt?
+createdAt
+createdBy
+updatedAt
+updatedBy
+```
 
-Campos propostos:
+### Contatos da empresa
 
-- nome;
-- telefone;
-- curso de interesse;
-- instituição de interesse;
-- origem;
-- responsável;
-- status;
-- período;
-- resultado;
-- motivo de perda.
+```text
+id
+companyId
+name
+role
+phone
+email
+isDecisionMaker
+active
+```
 
-Status sugeridos:
+### Estágios
 
-- Novo
-- Em atendimento
-- Aguardando retorno
-- Aguardando documentação
-- Aguardando pagamento
-- Matriculado
-- Perdido
-- Sem resposta
+```text
+PROSPECTED
+CONTACTED
+DECISION_MAKER_IDENTIFIED
+MEETING_SCHEDULED
+MEETING_HELD
+PROPOSAL_SENT
+NEGOTIATION
+PARTNERSHIP_APPROVED
+PARTNERSHIP_ACTIVE
+NO_INTEREST
+```
 
-O nível de obrigatoriedade de uso deste módulo ainda deverá ser validado. Ele não deve tornar o atendimento excessivamente burocrático.
+### Regras
 
-### 16.9 Convênios
+- próximo passo obrigatório em oportunidade aberta;
+- reunião e proposta possuem data;
+- sem interesse possui motivo;
+- CNPJ é opcional na primeira abordagem;
+- empresa sem CNPJ usa revisão de similaridade;
+- empresa com CNPJ usa chave normalizada;
+- evitar duplicidade;
+- carteira por consultor;
+- gestão visualiza tudo.
 
-Campos propostos:
+## 18. Parcerias e convênios
 
-- empresa;
-- contato;
-- cidade/bairro;
-- responsável CIES;
-- status;
-- visitas;
+### Campos
+
+```text
+id
+companyId
+ownerId
+status
+benefitType
+startDate?
+endDate?
+responsibleContactId?
+activationNotes?
+leadCount
+enrollmentCount
+revenueCents
+lastActionAt?
+createdAt
+updatedAt
+```
+
+### Status
+
+- Em prospecção;
+- Em negociação;
+- Aprovada;
+- Ativa;
+- Inativa.
+
+### Indicadores
+
 - leads gerados;
-- matrículas geradas;
-- período.
-
-Status sugeridos:
-
-- A prospectar
-- Contato feito
-- Visita agendada
-- Proposta enviada
-- Convênio fechado
-- Sem interesse
-- Reativar depois
-
-### 16.10 Marketing e campanhas
-
-- campanha;
-- canal;
-- período;
-- custo;
-- leads;
 - matrículas;
 - conversão;
-- instituição/curso relacionado;
-- resultado.
+- receita;
+- última ação;
+- tempo sem movimentação.
 
-Canais iniciais sugeridos:
+Parceria ativa deve ser um canal permanente, não apenas um registro de empresa fechada.
 
-- Instagram
-- WhatsApp
-- Indicação
-- Presencial
-- Panfleto
-- Empresa conveniada
-- Evento
-- Google
-- TikTok
-- Campanha interna
+## 19. Atividades
 
-### 16.11 Relacionamento / casos importantes
+### Tipos
 
-Este módulo não deve copiar o sistema acadêmico das faculdades nem registrar todo atendimento.
+- ligação;
+- WhatsApp;
+- contato novo;
+- follow-up;
+- visita;
+- prospecção;
+- reunião;
+- proposta;
+- matrícula.
 
-Deve apoiar registros estratégicos, como:
+### Modelo
 
-- reclamação recorrente;
-- aluno com risco de evasão;
-- dificuldade de acesso;
-- problema com prova;
-- problema financeiro;
-- dificuldade de contato;
-- caso que impacta retenção;
-- venda fechada pelo atendimento;
-- indicação;
-- pendência importante.
+```text
+id
+actorId
+type
+entityType
+entityId
+occurredAt
+outcome?
+nextStep?
+notes?
+source: AUTO | MANUAL
+createdAt
+```
 
-Possíveis status:
+Atividades automáticas devem ser criadas para eventos confiáveis, como:
 
-- Aberto
-- Em acompanhamento
-- Resolvido
-- Encaminhado
-- Sem retorno
-- Risco de evasão
+- mudança de estágio;
+- reunião marcada;
+- proposta enviada;
+- lead convertido;
+- parceria aprovada.
 
-**Regra atual:** observação interna em cada matrícula não faz parte da primeira versão confirmada. Casos importantes podem existir como entidade separada se aprovados.
+Não duplicar automaticamente contadores agregados e eventos.
 
-### 16.12 Planos de ação 5W2H
+## 20. Metas
+
+```text
+id
+periodType
+periodStart
+periodEnd
+metric
+scopeType
+scopeId?
+targetValue
+unit
+status
+createdBy
+createdAt
+updatedAt
+```
+
+Métricas:
+
+- leads;
+- contatos;
+- reuniões;
+- propostas;
+- parcerias;
+- matrículas;
+- faturamento.
+
+Escopos:
+
+- empresa/CIES;
+- equipe;
+- consultor;
+- instituição;
+- curso;
+- canal.
+
+O realizado deve ser calculado.
+
+## 21. Dashboard e páginas analíticas
+
+### Dashboard executivo
+
+Hero KPIs:
+
+- matrículas;
+- progresso da meta;
+- faturamento válido;
+- conversão B2C;
+- parcerias ativas;
+- BVS pendentes.
+
+Seis cards são uma proposta; a Gestão poderá priorizar.
+
+Seções:
+
+1. progresso do mês;
+2. tendência;
+3. funil B2C;
+4. funil B2B;
+5. desempenho por consultor;
+6. origens;
+7. instituições e cursos;
+8. alertas;
+9. ações 5W2H.
+
+### Dashboard comercial
+
+- leads por etapa;
+- conversão;
+- follow-ups;
+- ranking;
+- atividades;
+- metas;
+- motivos de perda;
+- previsão simples baseada em etapas, marcada como estimativa.
+
+### Dashboard B2B
+
+- empresas por etapa;
+- reuniões;
+- propostas;
+- parcerias;
+- empresas sem próximo passo;
+- parcerias sem ação;
+- leads e matrículas por parceria.
+
+### Dashboard operacional
+
+- matrículas;
+- Subiu;
+- BVS;
+- importações;
+- inconsistências;
+- faturamento total e válido.
+
+### Filtros globais
+
+- período;
+- consultor;
+- equipe;
+- instituição;
+- curso;
+- modalidade;
+- origem;
+- cidade;
+- empresa/parceria;
+- status.
+
+Filtros devem afetar elementos coerentes e mostrar claramente quando não se aplicam.
+
+## 22. Catálogo inicial de KPIs
+
+| KPI | Fórmula |
+|---|---|
+| Conversão B2C | Leads matriculados / leads elegíveis |
+| Taxa de contato | Leads com contato / leads novos |
+| Taxa de qualificação | Leads qualificados / leads contatados |
+| Proposta → matrícula | Matrículas / propostas enviadas |
+| Empresas → reunião | Reuniões realizadas / empresas prospectadas |
+| Reunião → proposta | Propostas / reuniões realizadas |
+| Empresa → parceria | Parcerias aprovadas / empresas prospectadas |
+| Leads por parceria | Leads vinculados / parcerias ativas |
+| Matrículas por parceria | Matrículas vinculadas / parcerias ativas |
+| Taxa de liberação | Matrículas com Subiu=SIM / matrículas elegíveis |
+| Taxa de BVS | Matrículas com BVS=SIM / matrículas liberadas |
+| Atingimento de meta | realizado / meta |
+| Ticket médio | faturamento válido / matrículas válidas |
+
+Cada denominador deve tratar zero e critérios de elegibilidade.
+
+## 23. Sistema visual
+
+### Objetivo
+
+Transmitir:
+
+- organização;
+- confiança;
+- clareza;
+- modernidade;
+- controle;
+- profissionalismo.
+
+### Layout
+
+- sidebar fixa e recolhível;
+- cabeçalho;
+- conteúdo com largura confortável;
+- filtros persistentes;
+- cards alinhados;
+- gráficos responsivos;
+- tabela operacional;
+- detalhes em drawer;
+- modais apenas para confirmação ou tarefa focada.
+
+### Cores propostas
+
+```text
+background: neutro muito claro
+surface: branco
+primary: azul corporativo
+navigation: azul-marinho
+success: verde
+warning: âmbar
+danger: vermelho
+text: cinza-azulado escuro
+muted: cinza
+```
+
+A paleta é PROPOSTA até identidade oficial.
+
+### Componentes essenciais
+
+- PageHeader;
+- GlobalPeriodFilter;
+- KpiCard;
+- GoalProgress;
+- FunnelChart;
+- TrendChart;
+- RankingTable;
+- DataTable;
+- FilterBar;
+- StatusBadge;
+- EmptyState;
+- ErrorState;
+- Skeleton;
+- ConfirmDialog;
+- EntityDrawer;
+- ActivityTimeline;
+- NextStepAlert;
+- PermissionGuard visual, sem substituir autorização server-side.
+
+## 24. Modelo Firestore inicial
+
+### Coleções
+
+```text
+accessAllowlist
+users
+employees
+sellerAliases
+students
+enrollments
+importBatches
+leads
+companies
+companyContacts
+partnerships
+salesActivities
+goals
+campaigns
+relationshipCases
+actionPlans
+auditLogs
+metricSnapshots
+appSettings
+```
+
+### Princípios
+
+- top-level collections para consultas globais;
+- subcollections somente quando fortemente acopladas;
+- sem arrays ilimitados;
+- timestamps de servidor;
+- `schemaVersion`;
+- soft delete;
+- índices compostos planejados;
+- fingerprints HMAC server-side para CPF/CNPJ/e-mail quando necessário;
+- nenhuma PII em ID.
+
+## 25. Auditoria
+
+Registrar:
+
+- login bloqueado;
+- criação/desativação de acesso;
+- mudança de permissão;
+- redistribuição de lead/empresa;
+- mudança de Vendedor;
+- mudança de Valor;
+- importação;
+- reversão;
+- invalidação;
+- parceria aprovada;
+- alteração de meta;
+- exportação sensível.
 
 Campos:
 
-- objetivo;
-- o quê;
-- por quê;
-- onde;
-- quando;
-- quem;
-- como;
-- quanto;
-- status;
-- KPI relacionado;
-- resultado.
-
-O fluxo esperado é:
-
 ```text
-Objetivo → 5W2H → Execução → KPI → Análise → Ajuste/Novo 5W2H
+actorId
+action
+entityType
+entityId
+changedFields
+timestamp
+correlationId?
+reason?
 ```
 
-### 16.13 Relatórios
+Não registrar conteúdo sensível integral.
 
-Relatórios por:
-
-- período;
-- instituição;
-- curso;
-- vendedor;
-- pagamento;
-- BVS;
-- Subiu;
-- campanha;
-- convênio;
-- colaborador;
-- meta.
-
-Exportação PDF/Excel pode ser incluída conforme priorização.
-
----
-
-## 17. KPIs e análises desejadas
-
-### 17.1 Matrículas
-
-- total de matrículas;
-- meta x realizado;
-- faltante para a meta;
-- evolução por período;
-- matrículas por instituição;
-- matrículas por curso;
-- matrículas por vendedor;
-- matrículas por pagamento.
-
-### 17.2 Faturamento
-
-- faturamento total;
-- faturamento válido;
-- meta x realizado;
-- faturamento por instituição;
-- faturamento por vendedor;
-- ticket médio, se aprovado.
-
-### 17.3 Operação pós-matrícula
-
-- taxa de matrículas que subiram;
-- quantidade pendente de subir;
-- taxa de BVS enviada;
-- quantidade de BVS pendentes;
-- tempo de pendência, somente se no futuro houver data confiável.
-
-### 17.4 Comercial e marketing
-
-- leads captados;
-- conversão em matrícula;
-- origem dos leads;
-- campanha x resultado;
-- convênios fechados;
-- leads e matrículas por convênio.
-
-### 17.5 Atendimento e relacionamento
-
-- casos importantes;
-- reclamações;
-- problemas recorrentes;
-- casos resolvidos;
-- sinais de risco de evasão;
-- vendas fechadas pelo atendimento;
-- satisfação, se no futuro houver coleta estruturada.
-
-### 17.6 Semáforo
-
-O uso de verde, amarelo e vermelho foi aprovado conceitualmente, mas os limites exatos ainda precisam ser definidos.
-
-Proposta inicial não confirmada:
-
-- Verde: meta alcançada ou desempenho saudável.
-- Amarelo: atenção, próximo do limite.
-- Vermelho: desempenho abaixo do esperado ou gargalo crítico.
-
-Nunca usar somente cor; incluir texto e valor.
-
----
-
-## 18. Fluxos críticos de usuário
-
-### 18.1 Importar e revisar matrículas
-
-```text
-Login
-→ Importações
-→ Selecionar arquivo
-→ Informar mês
-→ Validar
-→ Revisar prévia
-→ Resolver duplicidades/erros
-→ Confirmar
-→ Ver resumo
-→ Dashboard atualizado
-```
-
-### 18.2 Atualizar liberação e boas-vindas
-
-```text
-Matrículas
-→ Filtrar Subiu? = NÃO/vazio
-→ Atualizar para SIM
-→ Sistema verifica BVS
-→ Matrícula aparece em BVS pendente
-→ Abrir WhatsApp pelo Redirect
-→ Enviar boas-vindas
-→ Marcar BVS = SIM
-→ Pendência removida
-```
-
-### 18.3 Analisar meta e criar ação
-
-```text
-Dashboard
-→ Selecionar mês
-→ Identificar KPI abaixo da meta
-→ Abrir detalhes
-→ Identificar dimensão do gargalo
-→ Criar plano 5W2H
-→ Atribuir responsável/prazo
-→ Medir novamente no próximo período
-```
-
-### 18.4 Editar campo protegido
-
-```text
-Matrícula
-→ Solicitar edição de Vendedor ou Valor
-→ Verificar permissão no servidor
-→ Exibir confirmação
-→ Salvar alteração
-→ Registrar auditoria
-→ Recalcular indicadores afetados
-```
-
----
-
-## 19. Modelo conceitual inicial
-
-Este modelo é uma proposta de domínio para Cloud Firestore, não um desenho final e imutável.
-
-### Collections e documentos principais
-
-#### `users/{uid}`
-
-- name
-- email
-- status
-- areas
-- permissions por módulo/ação
-- employeeId opcional
-- createdAt / updatedAt
-
-O `uid` vem do Firebase Authentication. O usuário não pode elevar suas próprias permissões.
-
-#### `areas/{areaId}`
-
-- name
-- active
-
-#### `employees/{employeeId}`
-
-- userId opcional
-- displayName
-- active
-- primaryArea
-
-#### `sellerAliases/{aliasId}`
-
-- employeeId
-- sourceName
-- normalizedSourceName
-
-#### `students/{studentId}`
-
-- normalizedCpf protegido
-- cpfFingerprint para busca/deduplicação server-side
-- name
-- phone
-- createdAt / updatedAt
-
-CPF nunca deve ser document ID. A estratégia final de proteção deve ser documentada em ADR.
-
-#### `enrollments/{enrollmentId}`
-
-- studentId
-- institution
-- courseOfficialName
-- courseNormalizedName
-- referenceMonth (`YYYY-MM`)
-- amountCents
-- type opcional
-- sellerId
-- sellerSourceName
-- welcomeStatus (`yes` / `no` / `unset`)
-- releaseStatus (`yes` / `no` / `unset`)
-- paymentMethod
-- redirect
-- validityStatus
-- dedupFingerprint
-- importBatchId opcional
-- sourceRowNumber opcional
-- schemaVersion
-- createdAt / createdBy
-- updatedAt / updatedBy
-
-#### `importBatches/{batchId}`
-
-- referenceMonth
-- originalFileName sanitizado
-- importedBy
-- status
-- totals
-- parserVersion
-- createdAt / completedAt
-
-#### `importBatches/{batchId}/rows/{rowId}`
-
-- rowNumber
-- status
-- errorCode
-- message sanitizada
-- enrollmentId opcional
-- normalizedPreview sem PII desnecessária
-
-#### `goals/{goalId}`
-
-- period
-- metric
-- target
-- scope
-- status
-
-#### `kpiSnapshots/{snapshotId}` ou agregação calculada
-
-A decisão entre aggregation queries, snapshots persistidos e agregação de escrita será feita considerando consistência, custo de leitura e volume. Dashboards não devem baixar toda a collection para calcular totais no cliente.
-
-#### `leads/{leadId}`
-
-- contact data protegida
-- interest
-- source
-- owner
-- status
-- outcome
-
-#### `partnerships/{partnershipId}`
-
-- company
-- contact
-- owner
-- status
-- metrics
-
-#### `campaigns/{campaignId}`
-
-- channel
-- period
-- costCents
-- metrics
-
-#### `relationshipCases/{caseId}`
-
-- studentId opcional
-- category
-- status
-- owner
-- retentionImpact
-
-#### `actionPlans/{planId}`
-
-- objective
-- what
-- why
-- where
-- when
-- who
-- how
-- howMuchCents
-- linkedKpi
-- status
-
-#### `auditLogs/{logId}`
-
-- actorId
-- entity
-- entityId
-- action
-- changedFields sem valores sensíveis desnecessários
-- timestamp
-- request/correlation id quando aplicável
-
-### Observações de modelagem Firestore
-
-- Use top-level collections para dados consultados globalmente.
-- Use subcollections apenas para filhos realmente acoplados ao pai.
-- Evite arrays ilimitados e documentos que cresçam indefinidamente.
-- Planeje queries e composite indexes antes de implementar filtros.
-- Toda desnormalização precisa ter fonte canônica e mecanismo de atualização.
-- Dados pessoais e financeiros exigem Rules, autorização server-side, mascaramento e logs seguros.
-- Evoluções de estrutura devem usar `schemaVersion` e scripts idempotentes de backfill.
-
-## 20. Requisitos de experiência do usuário
-
-- Interface em português do Brasil.
-- Dashboard compreensível rapidamente.
-- Filtros consistentes por mês/período.
-- Tabelas com pesquisa e filtros.
-- Ações rápidas para BVS e Subiu.
-- Confirmação para ações críticas.
-- Estados de loading, vazio, erro e sucesso.
-- Feedback claro após importação e edição.
-- Acessibilidade básica desde o início.
-- Desktop como contexto principal de uso.
-- Responsividade suficiente para consultas em celular.
-- Não exigir conhecimento técnico dos colaboradores.
-
----
-
-## 21. Requisitos não funcionais
+## 26. Requisitos não funcionais
 
 ### Segurança
 
 - autenticação individual;
-- autorização no servidor;
-- proteção de CPF e telefone;
-- segredo fora do Git;
-- upload privado e validado;
-- auditoria de campos críticos;
+- allowlist;
+- autorização server-side;
+- Rules;
+- PII protegida;
+- audit trail;
 - prevenção de exclusão acidental.
 
 ### Confiabilidade
 
-- importação repetível e revisável;
-- cálculos financeiros exatos;
-- migrações versionadas;
-- backups antes de mudanças destrutivas;
-- comportamento testado para duplicidades.
+- importação repetível;
+- cálculos exatos;
+- testes;
+- idempotência;
+- versionamento de schema;
+- reconciliação de métricas.
 
 ### Desempenho
 
-A empresa possui poucos colaboradores, mas pode ter uma base grande de matrículas. O sistema deve usar paginação, filtros no servidor e índices adequados, sem otimização prematura.
+- paginação;
+- filtros no servidor;
+- índices;
+- agregações;
+- evitar N+1;
+- evitar leituras desnecessárias.
+
+### Acessibilidade
+
+- teclado;
+- foco;
+- labels;
+- contraste;
+- texto além de cor;
+- gráficos com tabela/descrição;
+- mensagens acionáveis.
 
 ### Manutenibilidade
 
-- TypeScript estrito;
-- arquitetura modular;
-- testes em regras críticas;
-- documentação viva;
-- dependências reduzidas;
-- CI obrigatório.
+- TypeScript strict;
+- módulos;
+- schemas;
+- testes;
+- CI;
+- documentação;
+- dependências reduzidas.
 
-### Observabilidade
-
-- logs técnicos sem dados pessoais desnecessários;
-- registro de falhas de importação;
-- rastreabilidade de ações críticas;
-- monitoramento de erros a definir antes da produção.
-
----
-
-## 22. Direção tecnológica
-
-### Confirmado
-
-- Desenvolvimento colaborativo usando GitHub.
-- Uso do Google Antigravity como ambiente/agente de desenvolvimento.
-- Aplicação web em Next.js.
-- Firebase Console como plataforma backend escolhida.
-- Cloud Firestore como banco de dados.
-- Firebase Authentication para acesso individual dos colaboradores.
-- Firebase Admin SDK somente no servidor.
-- Firebase Security Rules e autorização server-side como camadas complementares.
-- Arquivos de contexto `AGENTS.md`, `CONTEXT.md` e `HYPER_PROMPT.md`.
-
-### Proposto
-
-- Next.js App Router.
-- TypeScript estrito.
-- Tailwind CSS e shadcn/ui.
-- Sessão SSR por cookie seguro criado a partir de Firebase ID token.
-- Cloud Firestore Standard edition em Native mode.
-- Firebase Local Emulator Suite.
-- Firebase App Hosting integrado ao GitHub.
-- Firebase App Check em produção.
-- Cloud Storage apenas se a retenção de planilhas for aprovada.
-- Cloud Functions 2nd gen somente para tarefas assíncronas/agendadas justificadas.
-- Permissões granulares em `users/{uid}`; custom claims apenas para atributos pequenos e estáveis.
-- Testes unitários, integração, Security Rules e E2E.
-- Ambientes separados por projeto/alias Firebase.
-
-### Pendente de decisão
-
-- região do Firestore e do App Hosting;
-- plano Spark/Blaze e orçamento mensal;
-- política de criação inicial de usuários;
-- uso definitivo de custom claims;
-- hospedagem final no Firebase App Hosting;
-- retenção ou descarte imediato dos arquivos importados;
-- necessidade de Cloud Storage;
-- necessidade de Cloud Functions;
-- serviço de e-mail;
-- domínio e e-mails corporativos;
-- biblioteca de gráficos;
-- política de backups/exportações;
-- política LGPD/privacidade interna;
-- estratégia de projetos Firebase: development, staging e production;
-- regras detalhadas de App Check e monitoramento.
-
-Decisões relevantes devem ser registradas em ADRs.
-
-## 23. Estratégia de desenvolvimento colaborativo
-
-### Fluxo recomendado
-
-- `main` protegida e estável;
-- branches curtas por tarefa;
-- pull request obrigatório;
-- revisão cruzada entre Eric e seu primo;
-- CI com lint, typecheck, testes e build;
-- squash merge;
-- issues ou quadro de tarefas para dividir o trabalho;
-- nenhuma edição concorrente nos mesmos arquivos sem alinhamento.
-
-### Divisão inicial sugerida
-
-#### Eric
-
-- domínio e requisitos;
-- importação da planilha;
-- matrículas;
-- permissões do Relacionamento;
-- validação com a CIES.
-
-#### Primo
-
-- estrutura visual e componentes;
-- autenticação;
-- dashboards e gráficos;
-- CI/deploy, conforme experiência.
-
-A divisão é apenas proposta. Tarefas devem ser organizadas por módulos com fronteiras claras.
-
----
-
-## 24. Escopo sugerido da primeira versão funcional
+## 27. Escopo da primeira versão funcional
 
 ### Núcleo obrigatório
 
-- autenticação;
-- usuários/permissões básicas;
-- importação da planilha;
-- validação e revisão;
-- matrículas;
-- edição manual;
-- regra de duplicidade;
-- BVS/Subiu tri-state;
-- BVS pendentes automáticas;
-- dashboard principal;
-- faturamento total e válido;
-- indicadores por vendedor, instituição e curso;
-- histórico de importação;
-- proteção de Valor e Vendedor;
-- auditoria básica de ações críticas.
+1. login Google;
+2. allowlist;
+3. perfis e permissões;
+4. shell visual;
+5. leads B2C;
+6. empresas B2B;
+7. contatos;
+8. atividades;
+9. parcerias;
+10. metas;
+11. matrículas;
+12. importação;
+13. BVS/Subiu;
+14. dashboard executivo;
+15. dashboard comercial;
+16. auditoria;
+17. dados sintéticos;
+18. testes;
+19. CI;
+20. documentação de ambiente.
 
-### Módulos possíveis no mesmo ciclo, conforme tempo
+### Segunda camada
 
-- metas e KPIs configuráveis;
-- colaboradores;
-- planos 5W2H;
-- leads;
-- convênios;
 - campanhas;
-- casos importantes de Relacionamento;
-- relatórios/exportações.
+- casos estratégicos de relacionamento;
+- planos 5W2H;
+- relatórios;
+- exportações;
+- aliases avançados;
+- snapshots de KPI;
+- integrações futuras.
 
-A quantidade de telas não deve comprometer a confiabilidade do núcleo.
+A segunda camada deve ser implementada depois que o núcleo estiver confiável.
 
----
+## 28. Critérios de aceitação de alto nível
 
-## 25. Critérios de aceitação de alto nível
+1. Colaborador autorizado entra com Google.
+2. Conta Google não autorizada não acessa o sistema.
+3. Gestão administra acessos.
+4. Consultor externo vê a própria carteira.
+5. Gestão vê a equipe.
+6. Lead percorre o funil.
+7. Follow-up vencido é destacado.
+8. Empresa percorre o funil B2B.
+9. Reunião, proposta e parceria ficam registradas.
+10. Parceria gera leads e matrículas vinculados.
+11. Metas mostram realizado calculado.
+12. Planilha histórica é importada.
+13. Mesmo CPF com curso diferente é aceito.
+14. Duplicado exato é sinalizado.
+15. BVS e Subiu preservam três estados.
+16. Subiu=SIM e BVS pendente aparece automaticamente.
+17. Relacionamento edita matrícula.
+18. Relacionamento não muda Vendedor.
+19. Valor permanece protegido.
+20. Dashboard reconcilia com tabelas.
+21. Filtros funcionam.
+22. Ações críticas deixam auditoria.
+23. Dados reais não aparecem em código/testes.
+24. Lint, typecheck, testes e build passam.
 
-A primeira versão será considerada funcional quando:
+## 29. Decisões confirmadas
 
-1. Um usuário autorizado consegue entrar no sistema.
-2. A planilha histórica é importada sem reformatação obrigatória.
-3. Cabeçalhos ausentes são detectados antes da persistência.
-4. Valores, CPF, BVS, Subiu, instituição e pagamento são normalizados corretamente.
-5. O mesmo CPF com cursos diferentes é aceito.
-6. Um duplicado exato do mesmo período é sinalizado.
-7. Usuário autorizado pode corrigir dados importados.
-8. Relacionamento pode editar qualquer matrícula.
-9. Relacionamento não altera Vendedor.
-10. Valor permanece protegido.
-11. `Subiu = SIM` com BVS não enviada gera pendência automática.
-12. Dashboard mostra matrículas e faturamento do mês.
-13. Dashboard mostra faturamento total e válido separadamente.
-14. Indicadores podem ser filtrados por período.
-15. Ações críticas exigem confirmação e deixam rastreabilidade.
-16. Permissões não podem ser burladas por chamada direta ao servidor.
-17. Dados reais não aparecem em repositório, testes ou logs públicos.
-18. O projeto passa por lint, typecheck, testes críticos e build.
+- manter planilha;
+- importar periodicamente;
+- editar dados importados;
+- mês é suficiente;
+- mesmo CPF pode ter cursos diferentes;
+- duplicidade inclui curso, instituição e período;
+- BVS e Subiu são tri-state;
+- BVS pendente automática;
+- Relacionamento edita qualquer matrícula;
+- Vendedor somente Gestão/Admin altera;
+- Valor protegido;
+- faturamento total e válido separados;
+- todos os colaboradores terão acesso individual;
+- três consultores externos trabalharão B2C e B2B;
+- sistema terá funis B2C e B2B;
+- sistema terá atividades, parcerias e metas;
+- login será com Google;
+- Firebase será backend;
+- Firestore será banco;
+- Next.js será aplicação;
+- Vercel será hospedagem-alvo;
+- GitHub será usado na colaboração;
+- Antigravity será usado na construção.
 
----
+## 30. Decisões propostas
 
-## 26. Decisões ainda necessárias com Elen
+- shadcn/ui;
+- paleta azul corporativa;
+- allowlist server-side;
+- popup com fallback redirect;
+- monólito modular;
+- soft delete;
+- HMAC para fingerprints;
+- dados sintéticos;
+- preview Vercel por PR;
+- regras de semáforo configuráveis;
+- criação automática de atividades derivadas;
+- agregações server-side;
+- snapshots de KPI quando custo justificar.
 
-1. Quais são os cinco indicadores prioritários da primeira tela?
-2. Qual será a regra exata de verde, amarelo e vermelho?
-3. Quais permissões cada área terá para visualizar e editar outros módulos?
-4. Qual é a definição oficial de matrícula válida?
-5. Como canceladas, arquivadas, duplicadas e inválidas impactam faturamento?
-6. Quem poderá importar, reverter e invalidar lotes?
-7. Qual será a frequência operacional padrão de análise?
-8. Metas serão apenas gerais ou também por colaborador/instituição/curso?
-9. Quais módulos estratégicos precisam obrigatoriamente entrar na primeira entrega?
-10. Haverá criação imediata de e-mails corporativos?
-11. Por quanto tempo arquivos e históricos de importação devem ser mantidos?
-12. Colaboradores poderão visualizar todas as áreas em modo leitura?
-13. Quais relatórios precisam ser exportáveis na primeira versão?
-14. Quem será o administrador substituto além de Elen?
+## 31. Pendências da Gestão
 
-Essas perguntas não bloqueiam todo o bootstrap, mas bloqueiam partes específicas do produto.
+- definição oficial de matrícula válida;
+- regra exata do semáforo;
+- cinco KPIs prioritários da home;
+- permissões detalhadas de Comercial, Marketing e Administrativo;
+- nomes/e-mails dos consultores externos;
+- metas iniciais;
+- política de retenção de arquivos;
+- política de backup;
+- domínio/e-mails corporativos;
+- visibilidade entre áreas;
+- relatórios obrigatórios;
+- identidade visual oficial;
+- administrador substituto;
+- tempo de expiração da sessão;
+- orçamento Firebase/Vercel.
 
----
+Pendências não críticas devem usar default reversível e ser registradas.
 
-## 27. Riscos conhecidos
+## 32. Riscos
 
-### Escopo amplo em prazo curto
+### Escopo amplo
 
-Mitigação: construir o núcleo verticalmente, priorizando importação, matrículas, permissões e dashboard antes de módulos secundários.
+Mitigação: fatias verticais, gates e núcleo antes de módulos secundários.
 
-### Dependência da qualidade da planilha
+### Burocracia comercial
 
-Mitigação: validação, prévia, normalização, relatório de erros e fixtures baseadas no modelo real sem dados pessoais.
+Mitigação: campos mínimos, automações derivadas e próximo passo rápido.
 
-### Regras de permissão incompletas
+### Dados ruins
 
-Mitigação: negar por padrão e liberar somente ações confirmadas.
+Mitigação: validação, normalização, prévia e revisão.
+
+### Permissões incompletas
+
+Mitigação: negar por padrão.
+
+### Métricas divergentes
+
+Mitigação: catálogo central e testes de reconciliação.
 
 ### Dados pessoais
 
-Mitigação: segurança desde o início, dados fictícios em desenvolvimento e auditoria de acesso.
+Mitigação: allowlist, servidor, mascaramento, auditoria e dados sintéticos.
 
-### Dois desenvolvedores e agentes editando em paralelo
+### Agente autônomo
 
-Mitigação: branches curtas, divisão por módulo, PRs e rebase frequente.
+Mitigação: branches, diff, testes, proibição de ações destrutivas e artifacts.
 
-### “Prompt único” gerar mudanças grandes sem controle
-
-Mitigação: `HYPER_PROMPT.md` deve exigir etapas, testes, artifacts e gates de aprovação, mesmo que seja disparado por um único comando.
-
-### Replicar funções das faculdades
-
-Mitigação: aplicar os não objetivos e exigir justificativa gerencial para novos campos/módulos.
-
----
-
-## 28. Glossário
-
-| Termo | Significado |
-|---|---|
-| CIES | Empresa/polo que utilizará o sistema |
-| Matrícula subiu | Matrícula foi liberada no sistema da faculdade |
-| BVS | Mensagem de boas-vindas enviada após a liberação |
-| Redirect | Atalho/link para abrir o WhatsApp do aluno |
-| Inst. | Instituição parceira |
-| FSL | Faculdade São Luiz |
-| Vendedor | Pessoa que fechou a matrícula |
-| Mês de referência | Mês ao qual um lote de matrículas pertence |
-| Faturamento total | Soma geral definida para os registros da planilha |
-| Faturamento válido | Soma somente das matrículas classificadas como válidas |
-| 5W2H | Plano de ação: What, Why, Where, When, Who, How, How much |
-| KPI | Indicador-chave de desempenho |
-| Lote de importação | Conjunto de linhas processado a partir de um arquivo |
-| Matrícula inválida | Registro que não deve contar como matrícula válida, conforme regra a aprovar |
-
----
-
-## 29. Estado atual das decisões
-
-### Confirmado
-
-- Manter a planilha.
-- Importar dados periodicamente.
-- Dados importados podem ser editados.
-- Mês é suficiente; data exata não é necessária.
-- Mesmo CPF pode ter cursos diferentes.
-- Duplicidade considera curso, instituição e período.
-- BVS e Subiu aceitam SIM/NÃO/vazio.
-- BVS pendente é automática quando Subiu = SIM.
-- Relacionamento edita qualquer matrícula.
-- Vendedor só Gestão/Admin altera.
-- Valor é mais protegido.
-- Mostrar faturamento total e válido.
-- Todos os colaboradores terão acesso.
-- O sistema não substitui sistemas das faculdades nem toda rotina manual.
-- Firebase Console é a plataforma backend escolhida.
-- Cloud Firestore será o banco do sistema.
-- Firebase Authentication será usado nos acessos individuais.
-
-### Proposto
-
-- E-mails corporativos.
-- Visibilidade de leitura entre áreas.
-- Next.js App Router + TypeScript strict.
-- Aliases de vendedor.
-- Monólito modular.
-- Arquivar/inativar no lugar de excluir.
-- Ambientes de preview por PR.
-
-### Pendente
-
-- Região, plano, ambientes e hospedagem Firebase finais.
-- Permissões detalhadas de Comercial, Marketing e Administrativo.
-- Regra de matrícula válida.
-- Fórmulas e faixas do semáforo.
-- KPIs prioritários da home.
-- Escopo final das três semanas.
-- Política de arquivos, auditoria e backups.
-
----
-
-## 30. Manutenção deste documento
-
-Atualize este arquivo quando:
-
-- Elen aprovar uma decisão de negócio;
-- uma regra confirmada mudar;
-- um módulo entrar ou sair do escopo;
-- uma pendência for resolvida;
-- uma decisão arquitetural afetar a compreensão global.
-
-Não atualize este arquivo para cada commit ou detalhe de implementação.
-
-Ao modificar:
-
-1. Atualize a seção correspondente.
-2. Mova o item entre Confirmado, Proposto e Pendente.
-3. Registre a mudança no histórico abaixo.
-4. Faça a alteração em PR revisada.
-
-### Histórico
+## 33. Histórico
 
 | Data | Alteração | Responsável |
 |---|---|---|
-| 2026-07-13 | Primeira consolidação completa do contexto pré-desenvolvimento | Eric + ChatGPT |
+| 2026-07-13 | Consolidação inicial do CIES Gestão com Firebase | Eric + ChatGPT |
+| 2026-07-29 | Integração do planejamento comercial B2C/B2B, três consultores externos, seis bases operacionais e login Google | Eric + ChatGPT |

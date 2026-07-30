@@ -103,18 +103,6 @@ export default function RelacionamentoPage() {
     loadQueue();
   }, [selectedMonth]);
 
-  // Formata o mês ex: "2026-06" para "Junho de 2026"
-  const formatMonthName = (monthStr: string) => {
-    if (!monthStr) return '';
-    const [year, monthNum] = monthStr.split('-');
-    const months = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
-    const monthIndex = parseInt(monthNum, 10) - 1;
-    return `${months[monthIndex]} / ${year}`;
-  };
-
   /**
    * Trata o acionamento de envio de mensagem de boas-vindas
    */

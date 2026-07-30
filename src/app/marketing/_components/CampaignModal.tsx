@@ -34,21 +34,9 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   
-  const [formData, setFormData] = useState({
-    name: '',
-    channel: 'Instagram' as CampaignChannel,
-    startDate: '',
-    endDate: '',
-    costDisplay: '', // para a mascara visual
-    leadsCount: '',
-    enrollmentsCount: '',
-    status: 'Ativa' as CampaignStatus,
-    institution: ''
-  });
-
-  useEffect(() => {
+  const getInitialState = () => {
     if (campaign) {
-      setFormData({
+      return {
         name: campaign.name,
         channel: campaign.channel,
         startDate: campaign.startDate,
@@ -58,22 +46,31 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
         enrollmentsCount: campaign.enrollmentsCount ? campaign.enrollmentsCount.toString() : '',
         status: campaign.status,
         institution: campaign.institution || ''
-      });
-    } else {
-      setFormData({
-        name: '',
-        channel: 'Instagram',
-        startDate: new Date().toISOString().split('T')[0],
-        endDate: '',
-        costDisplay: '',
-        leadsCount: '',
-        enrollmentsCount: '',
-        status: 'Ativa',
-        institution: ''
-      });
+      };
     }
-    setError('');
-  }, [campaign, isOpen]);
+    return {
+      name: '',
+      channel: 'Instagram' as CampaignChannel,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: '',
+      costDisplay: '',
+      leadsCount: '',
+      enrollmentsCount: '',
+      status: 'Ativa' as CampaignStatus,
+      institution: ''
+    };
+  };
+
+  const [formData, setFormData] = useState(getInitialState);
+
+  useEffect(() => {
+    if (isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setFormData(getInitialState());
+      setError('');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [campaign?.id, isOpen]);
 
   if (!isOpen) return null;
 
@@ -82,8 +79,6 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
     setLoading(true);
     setError('');
 
-    // Prepara o DTO — envia a string formatada (ex: "R$ 250,00") para o Zod parseCurrencyToCents
-    // converter uma única vez para centavos. NÃO converter manualmente aqui.
     const dto = {
       ...formData,
       costCents: formData.costDisplay || '0',
@@ -105,8 +100,9 @@ export default function CampaignModal({ isOpen, onClose, campaign, onSuccess }: 
       } else {
         setError(res.error || 'Erro desconhecido');
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Erro ao salvar';
+      setError(msg);
     } finally {
       setLoading(false);
     }

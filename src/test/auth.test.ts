@@ -75,4 +75,15 @@ describe('Permissions & RBAC Authorization Logic', () => {
     expect(hasPermission(mockUser, 'imports', 'read')).toBe(true);
     expect(hasPermission(mockUser, 'imports', 'write')).toBe(true);
   });
+
+  it('deve restringir acoes de consultor externo apenas para sua propria carteira', () => {
+    mockUser.areas = ['comercial'];
+    mockUser.permissions = {
+      leads: ['read_own', 'write_own'],
+    };
+
+    expect(hasPermission(mockUser, 'leads', 'read_own')).toBe(true);
+    expect(hasPermission(mockUser, 'leads', 'write_all')).toBe(false);
+    expect(hasPermission(mockUser, 'users', 'write')).toBe(false);
+  });
 });

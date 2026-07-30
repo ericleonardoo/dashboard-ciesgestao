@@ -13,7 +13,6 @@ import { getAvailableMonths, getDashboardData, DashboardData } from '@/server/ac
 
 import { 
   FileSpreadsheet,
-  ChevronDown,
   Activity,
   AlertOctagon,
   ListTodo
@@ -108,17 +107,6 @@ export default function Home() {
     }
     loadDashboard();
   }, [selectedMonth]);
-
-  const formatMonthName = (monthStr: string) => {
-    if (!monthStr) return '';
-    const [year, monthNum] = monthStr.split('-');
-    const months = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
-    ];
-    const monthIndex = parseInt(monthNum, 10) - 1;
-    return `${months[monthIndex]} / ${year}`;
-  };
 
   const formatMoney = (cents: number) => {
     return new Intl.NumberFormat('pt-BR', {

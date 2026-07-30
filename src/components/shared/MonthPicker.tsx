@@ -15,19 +15,18 @@ const MONTHS = [
 export default function MonthPicker({ value, onChange, required }: MonthPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   
-  // Extrai o ano e mês atuais do value, ou usa a data atual
+  // Extrai o ano atual do value, ou usa a data atual
   const initialYear = value ? parseInt(value.split('-')[0]) : new Date().getFullYear();
-  const initialMonthIndex = value ? parseInt(value.split('-')[1]) - 1 : null;
   
   const [viewYear, setViewYear] = useState(initialYear);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Sincroniza o viewYear quando o menu abre
-  useEffect(() => {
-    if (isOpen) {
+  const toggleDropdown = () => {
+    if (!isOpen) {
       setViewYear(value ? parseInt(value.split('-')[0]) : new Date().getFullYear());
     }
-  }, [isOpen, value]);
+    setIsOpen(prev => !prev);
+  };
 
   // Fecha ao clicar fora
   useEffect(() => {
@@ -63,7 +62,7 @@ export default function MonthPicker({ value, onChange, required }: MonthPickerPr
     <div className="relative w-full" ref={dropdownRef}>
       {/* Botão Trigger */}
       <div 
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={toggleDropdown}
         className={`flex items-center justify-between bg-white border ${
           isOpen ? 'border-primary ring-2 ring-primary/20' : 'border-gray-300 hover:border-gray-400'
         } px-4 py-3 rounded-xl shadow-sm cursor-pointer transition-all w-full`}
