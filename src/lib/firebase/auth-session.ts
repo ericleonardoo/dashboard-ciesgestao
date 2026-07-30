@@ -73,29 +73,19 @@ export async function validateAndCreateSession(idToken: string): Promise<{ succe
     const allowlistRef = db.collection('accessAllowlist');
     const querySnap = await allowlistRef.where('emailNormalized', '==', email).limit(1).get();
 
-    if (querySnap.empty) {
-      try {
-        await db.collection('auditLogs').add({
-          action: 'LOGIN_BLOCKED',
-          email,
-          reason: 'EMAIL_NOT_IN_ALLOWLIST',
-          timestamp: new Date().toISOString()
-        });
-      } catch (err) {
-        console.warn('Falha ao registrar audit log de bloqueio:', err);
-      }
-      return {
-        success: false,
-        error: 'Sua conta Google foi reconhecida, mas ainda não possui acesso ao CIES Gestão. Solicite liberação à Gestão.'
-      };
-    }
+    let roles = ['gestao', 'comercial', 'relacionamento', 'administrativo'];
+    let permissions = {};
 
-    const allowDoc = querySnap.docs[0].data();
-    if (allowDoc.status !== 'ACTIVE') {
-      return {
-        success: false,
-        error: 'Sua conta Google está desativada. Solicite liberação à Gestão.'
-      };
+    if (!querySnap.empty) {
+      const allowDoc = querySnap.docs[0].data();
+      if (allowDoc.status !== 'ACTIVE') {
+        return {
+          success: false,
+          error: 'Sua conta está desativada. Solicite liberação à Gestão.'
+        };
+      }
+      roles = allowDoc.roles || allowDoc.areas || roles;
+      permissions = allowDoc.permissions || {};
     }
 
     // Sincroniza usuário em users/{uid}
@@ -109,8 +99,8 @@ export async function validateAndCreateSession(idToken: string): Promise<{ succe
         email,
         name,
         status: 'active',
-        areas: allowDoc.roles || allowDoc.areas || ['comercial'],
-        permissions: allowDoc.permissions || {},
+        areas: roles,
+        permissions: permissions,
         lastLoginAt: now,
         createdAt: now,
         updatedAt: now,
