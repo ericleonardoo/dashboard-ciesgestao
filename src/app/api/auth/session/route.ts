@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     const message = error instanceof Error ? error.message : String(error);
     return NextResponse.json(
       { error: 'Falha ao autenticar no servidor. Detalhes: ' + message },
-      { status: 500 }
+      { status: 400 }
     );
   }
 }
