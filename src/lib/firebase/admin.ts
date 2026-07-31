@@ -12,10 +12,12 @@ const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY;
 
 function getFormattedPrivateKey(key: string | undefined): string | undefined {
   if (!key) return undefined;
+  // Remove aspas extras que alguns provedores de hosting adicionam
   let clean = key.trim();
   if ((clean.startsWith('"') && clean.endsWith('"')) || (clean.startsWith("'") && clean.endsWith("'"))) {
     clean = clean.slice(1, -1);
   }
+  // Converte literal \n em quebras de linha reais
   return clean.replace(/\\n/g, '\n');
 }
 
@@ -31,27 +33,30 @@ function initializeAdmin() {
   const isEmulator = !!process.env.FIRESTORE_EMULATOR_HOST || !!process.env.FIREBASE_AUTH_EMULATOR_HOST;
 
   if (isEmulator) {
+    console.info('[Firebase Admin] Inicializando em modo emulador (sem credenciais).');
     return initializeApp({
       projectId: projectId || 'ciesgestaodashboard',
     });
   }
 
-  // Tenta inicializar com credenciais completas se fornecidas no ambiente
+  // Produção: requer credenciais completas
   if (projectId && clientEmail && privateKey) {
-    try {
-      return initializeApp({
-        credential: cert({
-          projectId,
-          clientEmail,
-          privateKey,
-        }),
-      });
-    } catch (certErr) {
-      console.warn('Aviso: Falha ao carregar cert do Firebase Admin, utilizando fallback de projectId:', certErr);
-    }
+    console.info('[Firebase Admin] Inicializando com credenciais de Service Account.');
+    return initializeApp({
+      credential: cert({
+        projectId,
+        clientEmail,
+        privateKey,
+      }),
+    });
   }
 
-  // Fallback seguro: inicializa com projectId para não travar o servidor em erro 500
+  // Fallback: sem credenciais completas — funciona para Firestore mas não para Auth.verifyIdToken
+  console.warn(
+    '[Firebase Admin] AVISO: Inicializando sem credenciais completas. ' +
+    'verifyIdToken e createSessionCookie não funcionarão corretamente. ' +
+    'Defina FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY na Vercel.'
+  );
   return initializeApp({
     projectId: projectId || 'ciesgestaodashboard',
   });
