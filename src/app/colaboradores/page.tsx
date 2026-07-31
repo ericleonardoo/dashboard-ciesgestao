@@ -62,7 +62,7 @@ export default async function ColaboradoresPage() {
                     </td>
                   </tr>
                 ) : (
-                  colaboradores.map((user) => (
+                  colaboradores.map((user: { uid: string; name: string; email: string; status: string; areas: string[]; createdAt: string | null }) => (
                     <tr key={user.uid} className="hover:bg-secondary/40 transition-colors">
                       <td className="py-3.5 px-4 font-medium text-foreground">{user.name}</td>
                       <td className="py-3.5 px-4 text-muted-foreground">{user.email}</td>

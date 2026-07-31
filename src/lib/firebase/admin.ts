@@ -1,9 +1,38 @@
-import { initializeApp, getApps, cert } from 'firebase-admin/app';
-import { getAuth } from 'firebase-admin/auth';
-import { getFirestore } from 'firebase-admin/firestore';
+/* eslint-disable @typescript-eslint/no-require-imports */
+
+/**
+ * Firebase Admin SDK initialization — server-only.
+ * 
+ * Uses dynamic require() to avoid Turbopack/Webpack bundling firebase-admin
+ * and its ESM-only transitive dependencies (jose, jwks-rsa, etc.) which cause
+ * ERR_REQUIRE_ESM on Vercel serverless functions.
+ */
 
 if (typeof window !== 'undefined') {
   throw new Error('firebase-admin can only be imported in server-side modules.');
+}
+
+// Lazy-loaded module references
+let _initializeApp: typeof import('firebase-admin/app').initializeApp;
+let _getApps: typeof import('firebase-admin/app').getApps;
+let _cert: typeof import('firebase-admin/app').cert;
+let _getAuth: typeof import('firebase-admin/auth').getAuth;
+let _getFirestore: typeof import('firebase-admin/firestore').getFirestore;
+
+function loadModules() {
+  if (!_initializeApp) {
+    // Dynamic require to bypass bundler — these packages are in serverExternalPackages
+    const appModule = require('firebase-admin/app');
+    _initializeApp = appModule.initializeApp;
+    _getApps = appModule.getApps;
+    _cert = appModule.cert;
+
+    const authModule = require('firebase-admin/auth');
+    _getAuth = authModule.getAuth;
+
+    const firestoreModule = require('firebase-admin/firestore');
+    _getFirestore = firestoreModule.getFirestore;
+  }
 }
 
 const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
@@ -24,7 +53,9 @@ function getFormattedPrivateKey(key: string | undefined): string | undefined {
 const privateKey = getFormattedPrivateKey(rawPrivateKey);
 
 function initializeAdmin() {
-  const apps = getApps();
+  loadModules();
+  
+  const apps = _getApps();
   if (apps.length > 0) {
     return apps[0];
   }
@@ -34,7 +65,7 @@ function initializeAdmin() {
 
   if (isEmulator) {
     console.info('[Firebase Admin] Inicializando em modo emulador (sem credenciais).');
-    return initializeApp({
+    return _initializeApp({
       projectId: projectId || 'ciesgestaodashboard',
     });
   }
@@ -42,8 +73,8 @@ function initializeAdmin() {
   // Produção: requer credenciais completas
   if (projectId && clientEmail && privateKey) {
     console.info('[Firebase Admin] Inicializando com credenciais de Service Account.');
-    return initializeApp({
-      credential: cert({
+    return _initializeApp({
+      credential: _cert({
         projectId,
         clientEmail,
         privateKey,
@@ -57,14 +88,17 @@ function initializeAdmin() {
     'verifyIdToken e createSessionCookie não funcionarão corretamente. ' +
     'Defina FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY na Vercel.'
   );
-  return initializeApp({
+  return _initializeApp({
     projectId: projectId || 'ciesgestaodashboard',
   });
 }
 
-let cachedApp: ReturnType<typeof initializeApp> | null = null;
-let cachedAuth: ReturnType<typeof getAuth> | null = null;
-let cachedDb: ReturnType<typeof getFirestore> | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedApp: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedAuth: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let cachedDb: any = null;
 
 export function getAdminApp() {
   if (!cachedApp) {
@@ -75,14 +109,16 @@ export function getAdminApp() {
 
 export function getAdminAuth() {
   if (!cachedAuth) {
-    cachedAuth = getAuth(getAdminApp());
+    loadModules();
+    cachedAuth = _getAuth(getAdminApp());
   }
   return cachedAuth;
 }
 
 export function getAdminDb() {
   if (!cachedDb) {
-    cachedDb = getFirestore(getAdminApp());
+    loadModules();
+    cachedDb = _getFirestore(getAdminApp());
   }
   return cachedDb;
 }

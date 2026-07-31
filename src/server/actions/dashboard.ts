@@ -47,7 +47,7 @@ export async function getAvailableMonths(): Promise<string[]> {
       .get();
 
     const monthsSet = new Set<string>();
-    importsSnapshot.docs.forEach((doc) => {
+    importsSnapshot.docs.forEach((doc: { data: () => Record<string, any> }) => {
       const month = doc.data().referenceMonth;
       if (month) {
         monthsSet.add(month);
@@ -94,7 +94,7 @@ export async function getDashboardData(referenceMonth: string): Promise<Dashboar
 
     const sellerMap: Record<string, { count: number; amountCents: number }> = {};
 
-    enrollmentsSnapshot.docs.forEach((doc) => {
+    enrollmentsSnapshot.docs.forEach((doc: { data: () => Record<string, any> }) => {
       const data = doc.data();
       const amount = data.amountCents || 0;
       const instName = data.institution || 'Outras';

@@ -49,7 +49,7 @@ export async function getBvsQueue(referenceMonth: string): Promise<BvsQueueResul
     const pending: BvsQueueItem[] = [];
     const sent: BvsQueueItem[] = [];
 
-    snapshot.docs.forEach((doc) => {
+    snapshot.docs.forEach((doc: { data: () => Record<string, any>; id: string }) => {
       const data = doc.data();
       const bvsStatus = data.bvsStatus || 'NÃO INFORMADO';
       

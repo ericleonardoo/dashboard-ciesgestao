@@ -110,7 +110,7 @@ export async function getColaboradores() {
   try {
     const usersSnapshot = await getAdminDb().collection('users').orderBy('name', 'asc').get();
     
-    return usersSnapshot.docs.map((doc) => {
+    return usersSnapshot.docs.map((doc: { data: () => Record<string, any>; id: string }) => {
       const data = doc.data();
       return {
         uid: doc.id,
@@ -244,7 +244,7 @@ export async function getColaboradoresDropdown() {
       .select('name')
       .get();
 
-    return snapshot.docs.map((doc) => ({
+    return snapshot.docs.map((doc: { data: () => Record<string, any>; id: string }) => ({
       uid: doc.id,
       name: doc.data().name || '',
     }));

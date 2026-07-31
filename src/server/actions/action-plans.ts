@@ -13,7 +13,7 @@ export async function getActionPlans(): Promise<ActionPlan[]> {
 
   try {
     const snapshot = await getAdminDb().collection(COLLECTION).orderBy('createdAt', 'desc').get();
-    return snapshot.docs.map(doc => {
+    return snapshot.docs.map((doc: FirebaseFirestore.QueryDocumentSnapshot) => {
       const data = doc.data();
       return {
         ...data,

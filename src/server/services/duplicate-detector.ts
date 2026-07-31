@@ -65,7 +65,7 @@ export async function checkDuplicateEnrollments(
 
     // Adiciona as assinaturas encontradas no Set
     for (const snap of snapshots) {
-      snap.docs.forEach((doc) => {
+      snap.docs.forEach((doc: { data: () => Record<string, any> }) => {
         const sig = doc.data().duplicateSignature;
         if (sig) {
           duplicates.add(sig);

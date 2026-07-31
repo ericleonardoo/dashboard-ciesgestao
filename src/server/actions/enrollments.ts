@@ -56,7 +56,7 @@ export async function getEnrollmentsList(referenceMonth: string): Promise<Enroll
 
     const enrollments: EnrollmentItem[] = [];
 
-    snapshot.docs.forEach((doc) => {
+    snapshot.docs.forEach((doc: { data: () => Record<string, any>; id: string }) => {
       const data = doc.data();
       enrollments.push({
         id: doc.id,
