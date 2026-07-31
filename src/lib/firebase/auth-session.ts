@@ -86,6 +86,15 @@ export async function validateAndCreateSession(idToken: string): Promise<{ succe
       }
       roles = allowDoc.roles || allowDoc.areas || roles;
       permissions = allowDoc.permissions || {};
+    } else {
+      // Se a coleção de allowlist possuir registros e o e-mail não estiver nela, nega o acesso
+      const totalAllowlistSnap = await allowlistRef.limit(1).get();
+      if (!totalAllowlistSnap.empty) {
+        return {
+          success: false,
+          error: 'Sua conta Google foi reconhecida, mas ainda não possui acesso ao CIES Gestão. Solicite liberação à Gestão.'
+        };
+      }
     }
 
     // Sincroniza usuário em users/{uid}
@@ -115,6 +124,7 @@ export async function validateAndCreateSession(idToken: string): Promise<{ succe
     await createSession(idToken);
     return { success: true };
   } catch (err: unknown) {
+    console.error('Erro em validateAndCreateSession:', err);
     const msg = err instanceof Error ? err.message : 'Erro ao validar autenticação.';
     return { success: false, error: msg };
   }

@@ -53,17 +53,23 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        let serverErrorMsg = 'Falha ao validar autorização no servidor.';
+        let serverErrorMsg = '';
         try {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            serverErrorMsg = data.error || serverErrorMsg;
-          } else {
-            serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          const text = await response.text();
+          try {
+            const data = JSON.parse(text);
+            serverErrorMsg = data.error || data.message || '';
+          } catch {
+            if (text && !text.includes('<!DOCTYPE')) {
+              serverErrorMsg = text.trim();
+            }
           }
         } catch {
-          serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          // ignore
+        }
+
+        if (!serverErrorMsg) {
+          serverErrorMsg = `Erro no servidor (${response.status}${response.statusText ? `: ${response.statusText}` : ''}). Verifique as variáveis de ambiente ou a conexão.`;
         }
         throw new Error(serverErrorMsg);
       }
@@ -102,17 +108,23 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        let serverErrorMsg = 'Erro ao registrar sessão no servidor.';
+        let serverErrorMsg = '';
         try {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            serverErrorMsg = data.error || serverErrorMsg;
-          } else {
-            serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          const text = await response.text();
+          try {
+            const data = JSON.parse(text);
+            serverErrorMsg = data.error || data.message || '';
+          } catch {
+            if (text && !text.includes('<!DOCTYPE')) {
+              serverErrorMsg = text.trim();
+            }
           }
         } catch {
-          serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          // ignore
+        }
+
+        if (!serverErrorMsg) {
+          serverErrorMsg = `Erro no servidor (${response.status}${response.statusText ? `: ${response.statusText}` : ''}). Verifique as variáveis de ambiente ou a conexão.`;
         }
         throw new Error(serverErrorMsg);
       }
@@ -181,17 +193,23 @@ export default function LoginPage() {
       });
 
       if (!response.ok) {
-        let serverErrorMsg = 'Erro ao inicializar sessão para a nova conta.';
+        let serverErrorMsg = '';
         try {
-          const contentType = response.headers.get('content-type');
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            serverErrorMsg = data.error || serverErrorMsg;
-          } else {
-            serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          const text = await response.text();
+          try {
+            const data = JSON.parse(text);
+            serverErrorMsg = data.error || data.message || '';
+          } catch {
+            if (text && !text.includes('<!DOCTYPE')) {
+              serverErrorMsg = text.trim();
+            }
           }
         } catch {
-          serverErrorMsg = `Erro no servidor (${response.status}: ${response.statusText || 'Resposta inválida'})`;
+          // ignore
+        }
+
+        if (!serverErrorMsg) {
+          serverErrorMsg = `Erro no servidor (${response.status}${response.statusText ? `: ${response.statusText}` : ''}). Verifique as variáveis de ambiente ou a conexão.`;
         }
         throw new Error(serverErrorMsg);
       }

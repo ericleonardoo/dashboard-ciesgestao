@@ -6,9 +6,20 @@ if (typeof window !== 'undefined') {
   throw new Error('firebase-admin can only be imported in server-side modules.');
 }
 
-const projectId = process.env.FIREBASE_PROJECT_ID;
+const projectId = process.env.FIREBASE_PROJECT_ID || process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
 const clientEmail = process.env.FIREBASE_CLIENT_EMAIL;
-const privateKey = process.env.FIREBASE_PRIVATE_KEY;
+const rawPrivateKey = process.env.FIREBASE_PRIVATE_KEY;
+
+function getFormattedPrivateKey(key: string | undefined): string | undefined {
+  if (!key) return undefined;
+  let clean = key.trim();
+  if ((clean.startsWith('"') && clean.endsWith('"')) || (clean.startsWith("'") && clean.endsWith("'"))) {
+    clean = clean.slice(1, -1);
+  }
+  return clean.replace(/\\n/g, '\n');
+}
+
+const privateKey = getFormattedPrivateKey(rawPrivateKey);
 
 function initializeAdmin() {
   const apps = getApps();
@@ -29,7 +40,7 @@ function initializeAdmin() {
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error(
-      'Missing Firebase Admin SDK environment variables: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, FIREBASE_PRIVATE_KEY.'
+      'Configuração do Firebase Admin SDK ausente no servidor. Defina FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY nas variáveis de ambiente da Vercel.'
     );
   }
 
@@ -37,7 +48,7 @@ function initializeAdmin() {
     credential: cert({
       projectId,
       clientEmail,
-      privateKey: privateKey.replace(/\\n/g, '\n'),
+      privateKey,
     }),
   });
 }
